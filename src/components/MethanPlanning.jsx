@@ -55,11 +55,7 @@ const MethanePlanning = () => {
     <div className="methane-page">
       <div className="page-header-section">
         <div>
-          <div className="breadcrumb-small">
-            <span>Home</span>
-            <span>/</span>
-            <span>Methane Planning</span>
-          </div>
+       
           <h1>Methane Risk Management & Planning</h1>
           <p>Monitor methane concentrations, assess risks, and track mitigation strategies across mine zones</p>
         </div>

@@ -111,11 +111,6 @@ const Calculator = () => {
     <div className="calculator-page">
       <div className="page-header-section">
         <div>
-          <div className="breadcrumb-small">
-            <span>Home</span>
-            <span>/</span>
-            <span>Carbon Calculator</span>
-          </div>
           <h1>Mining Emission Calculator</h1>
           <p>Calculate comprehensive emissions from mining operations with carbon credit estimation</p>
         </div>

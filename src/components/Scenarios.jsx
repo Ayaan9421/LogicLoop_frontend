@@ -47,11 +47,6 @@ const Scenarios = () => {
     <div className="scenarios-page">
       <div className="page-header-section">
         <div>
-          <div className="breadcrumb-small">
-            <span>Home</span>
-            <span>/</span>
-            <span>Mitigation Scenarios</span>
-          </div>
           <h1>Mitigation Scenario Simulator</h1>
           <p>Model interventions and forecast emission reductions against baseline</p>
         </div>

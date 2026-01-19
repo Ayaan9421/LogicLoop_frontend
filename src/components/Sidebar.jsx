@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   TrendingDown,
   Map,
-  Sprout
+  Sprout,
+  Database
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -25,6 +26,7 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
     { icon: Layers, label: 'Scenarios', id: 'scenarios' },
     { icon: TrendingDown, label: 'Gap Analysis', id: 'gap-analysis' },
     { icon: Sprout, label: 'Afforestation', id: 'afforestation' },
+    { icon: Database, label: 'Carbon Sink', id: 'carbon-sink' },
     { icon: FileText, label: 'Reports', id: 'reports' }
   ];
 

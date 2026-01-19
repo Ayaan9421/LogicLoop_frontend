@@ -11,6 +11,7 @@ import Settings from './components/Settings';
 import GapAnalysis from './components/GapAnalysis';
 import MineLocation from './components/MineLocation';
 import AfforestationEstimator from './components/AfforestationEstimator';
+import CarbonSinkRegistry from './components/CarbonRegistry';
 
 import './App.css';
 
@@ -58,6 +59,7 @@ const App = () => {
         {activePage === 'settings' && <Settings />}
         {activePage === 'gap-analysis' && <GapAnalysis onBack={() => setActivePage('dashboard')} />}
         {activePage === 'afforestation' && <AfforestationEstimator />}
+        {activePage === 'carbon-sink' && <CarbonSinkRegistry />}
       </div>
     </div>
   );
