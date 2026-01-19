@@ -10,17 +10,19 @@ import {
   Trees,
   LogOut,
   ChevronLeft,
-  TrendingDown // Add this import
+  TrendingDown,
+  Map
 } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
   const mainMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
+    { icon: Map, label: 'Mine Locations', id: 'mines' },
     { icon: Calculator, label: 'Calculator', id: 'calculator' },
     { icon: Wind, label: 'Methane Planning', id: 'methane' },
     { icon: Layers, label: 'Scenarios', id: 'scenarios' },
-    { icon: TrendingDown, label: 'Gap Analysis', id: 'gap-analysis' }, // Add this line
+    { icon: TrendingDown, label: 'Gap Analysis', id: 'gap-analysis' },
     { icon: FileText, label: 'Reports', id: 'reports' }
   ];
 

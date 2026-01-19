@@ -9,6 +9,7 @@ import Scenarios from './components/Scenarios';
 import RiskManagement from './components/RiskManagement';
 import Settings from './components/Settings';
 import GapAnalysis from './components/GapAnalysis.jsx';
+import MineLocation from './components/MineLocation';
 
 import './App.css';
 
@@ -32,9 +33,8 @@ const App = () => {
       <div className="main-content">
         <div className="topbar">
           <div className="page-title">
-  {activePage.replace('-', ' ').toUpperCase()}
-</div>
-
+            {activePage.replace('-', ' ').toUpperCase()}
+          </div>
 
           <div className="topbar-right">
             <button className="icon-btn">
@@ -48,6 +48,7 @@ const App = () => {
         </div>
 
         {activePage === 'dashboard' && <Dashboard />}
+        {activePage === 'mines' && <MineLocation />}
         {activePage === 'reports' && <Reports />}
         {activePage === 'calculator' && <Calculator />}
         {activePage === 'methane' && <MethanePlanning />}
