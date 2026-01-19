@@ -31,7 +31,11 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <div className="logo-container" onClick={toggleSidebar}>
+        <div
+  className="logo-container"
+  onClick={() => isCollapsed && toggleSidebar()}
+>
+
           <div className="logo-icon">
             <Trees size={24} color="white" />
           </div>
@@ -42,9 +46,16 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
             </div>
           )}
         </div>
-        <button className="close-btn" onClick={toggleSidebar} title={isCollapsed ? 'Expand' : 'Collapse'}>
-          {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
+       {!isCollapsed && (
+  <button
+    className="close-btn"
+    onClick={toggleSidebar}
+    title="Collapse"
+  >
+    <ChevronLeft size={20} />
+  </button>
+)}
+
       </div>
 
       <div className="menu-section">

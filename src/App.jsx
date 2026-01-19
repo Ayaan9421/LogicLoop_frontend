@@ -7,7 +7,7 @@ import Reports from "./components/Report";
 import './App.css';
 
 const App = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false); // Start expanded
+  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed
   const [activePage, setActivePage] = useState('dashboard');
 
   const toggleSidebar = () => {

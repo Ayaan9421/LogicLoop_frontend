@@ -16,6 +16,11 @@
   width: 80px;
 }
 
+.sidebar.collapsed .close-btn {
+  pointer-events: none;
+}
+
+
 .sidebar-header {
   padding: 20px;
   border-bottom: 1px solid #e2e8f0;
