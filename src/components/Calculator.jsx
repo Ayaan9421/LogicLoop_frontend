@@ -228,7 +228,7 @@ const Calculator = () => {
         </div>
 
         <div className="results-column">
-          <div className={`result-card-primary ${results ? 'show' : ''}`}>
+          <div className="result-card-primary show">
             <div className="result-icon">
               <Activity size={32} />
             </div>
@@ -237,116 +237,110 @@ const Calculator = () => {
               {results?.totalEmissions || '0.00'}
               <span className="result-unit">kgCO2e</span>
             </div>
-            {results && (
-              <div className="result-comparison">
-                ≈ {(parseFloat(results.totalEmissions) / 1000).toFixed(3)} tonnes CO2e
-              </div>
-            )}
+            <div className="result-comparison">
+              ≈ {results ? (parseFloat(results.totalEmissions) / 1000).toFixed(3) : '0.000'} tonnes CO2e
+            </div>
           </div>
 
-          {results && (
-            <>
-              <div className="breakdown-card fade-in">
-                <h3>Operational Breakdown</h3>
-                
-                <div className="breakdown-item">
-                  <div className="breakdown-header">
-                    <span className="breakdown-label">
-                      <Drill size={16} color="#3b82f6" />
-                      Excavation
-                    </span>
-                    <span className="breakdown-value">{results.excavationEmissions} kg</span>
-                  </div>
-                  <div className="progress-bar-container">
-                    <div 
-                      className="progress-bar-fill fuel" 
-                      style={{ width: `${results.excavationPercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="breakdown-percent">{results.excavationPercent}%</span>
-                </div>
+          <div className="breakdown-card fade-in">
+            <h3>Operational Breakdown</h3>
+            
+            <div className="breakdown-item">
+              <div className="breakdown-header">
+                <span className="breakdown-label">
+                  <Drill size={16} color="#3b82f6" />
+                  Excavation
+                </span>
+                <span className="breakdown-value">{results?.excavationEmissions || '0.00'} kg</span>
+              </div>
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar-fill fuel" 
+                  style={{ width: `${results?.excavationPercent || 0}%` }}
+                ></div>
+              </div>
+              <span className="breakdown-percent">{results?.excavationPercent || '0.0'}%</span>
+            </div>
 
-                <div className="breakdown-item">
-                  <div className="breakdown-header">
-                    <span className="breakdown-label">
-                      <Truck size={16} color="#f59e0b" />
-                      Transportation
-                    </span>
-                    <span className="breakdown-value">{results.transportationEmissions} kg</span>
-                  </div>
-                  <div className="progress-bar-container">
-                    <div 
-                      className="progress-bar-fill electricity" 
-                      style={{ width: `${results.transportationPercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="breakdown-percent">{results.transportationPercent}%</span>
-                </div>
+            <div className="breakdown-item">
+              <div className="breakdown-header">
+                <span className="breakdown-label">
+                  <Truck size={16} color="#f59e0b" />
+                  Transportation
+                </span>
+                <span className="breakdown-value">{results?.transportationEmissions || '0.00'} kg</span>
+              </div>
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar-fill electricity" 
+                  style={{ width: `${results?.transportationPercent || 0}%` }}
+                ></div>
+              </div>
+              <span className="breakdown-percent">{results?.transportationPercent || '0.0'}%</span>
+            </div>
 
-                <div className="breakdown-item">
-                  <div className="breakdown-header">
-                    <span className="breakdown-label">
-                      <Zap size={16} color="#ef4444" />
-                      Equipment
-                    </span>
-                    <span className="breakdown-value">{results.equipmentEmissions} kg</span>
-                  </div>
-                  <div className="progress-bar-container">
-                    <div 
-                      className="progress-bar-fill blasting" 
-                      style={{ width: `${results.equipmentPercent}%` }}
-                    ></div>
-                  </div>
-                  <span className="breakdown-percent">{results.equipmentPercent}%</span>
+            <div className="breakdown-item">
+              <div className="breakdown-header">
+                <span className="breakdown-label">
+                  <Zap size={16} color="#ef4444" />
+                  Equipment
+                </span>
+                <span className="breakdown-value">{results?.equipmentEmissions || '0.00'} kg</span>
+              </div>
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar-fill blasting" 
+                  style={{ width: `${results?.equipmentPercent || 0}%` }}
+                ></div>
+              </div>
+              <span className="breakdown-percent">{results?.equipmentPercent || '0.0'}%</span>
+            </div>
+          </div>
+
+          <div className="stats-grid fade-in">
+            <div className="stat-card">
+              <Users size={20} color="#10b981" />
+              <div>
+                <div className="stat-value">{results?.perCapitaEmissions || '0.00'}</div>
+                <div className="stat-label">kg per Worker</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <Package size={20} color="#6366f1" />
+              <div>
+                <div className="stat-value">{results?.perOutputEmissions || '0.00'}</div>
+                <div className="stat-label">kg per Tonne Output</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="carbon-credits-card fade-in">
+            <div className="credits-header">
+              <Leaf size={24} color="#10b981" />
+              <h3>Carbon Credits</h3>
+            </div>
+            <div className="credits-body">
+              <div className="credit-row">
+                <span>Baseline Emissions:</span>
+                <strong>{results?.baseline || '0.00'} kgCO2e</strong>
+              </div>
+              <div className="credit-row">
+                <span>Reduction Achieved:</span>
+                <strong className="text-green">{results?.reduced || '0.00'} kgCO2e</strong>
+              </div>
+              <div className="credit-row highlight">
+                <span>Carbon Credits Earned:</span>
+                <strong>{results?.carbonCredits || '0.00'} credits</strong>
+              </div>
+              <div className="credit-worth">
+                <DollarSign size={20} />
+                <div>
+                  <div className="worth-value">₹{results?.worth || '0.00'}</div>
+                  <div className="worth-label">Estimated Worth (@₹15/credit)</div>
                 </div>
               </div>
-
-              <div className="stats-grid fade-in">
-                <div className="stat-card">
-                  <Users size={20} color="#10b981" />
-                  <div>
-                    <div className="stat-value">{results.perCapitaEmissions}</div>
-                    <div className="stat-label">kg per Worker</div>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <Package size={20} color="#6366f1" />
-                  <div>
-                    <div className="stat-value">{results.perOutputEmissions}</div>
-                    <div className="stat-label">kg per Tonne Output</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="carbon-credits-card fade-in">
-                <div className="credits-header">
-                  <Leaf size={24} color="#10b981" />
-                  <h3>Carbon Credits</h3>
-                </div>
-                <div className="credits-body">
-                  <div className="credit-row">
-                    <span>Baseline Emissions:</span>
-                    <strong>{results.baseline} kgCO2e</strong>
-                  </div>
-                  <div className="credit-row">
-                    <span>Reduction Achieved:</span>
-                    <strong className="text-green">{results.reduced} kgCO2e</strong>
-                  </div>
-                  <div className="credit-row highlight">
-                    <span>Carbon Credits Earned:</span>
-                    <strong>{results.carbonCredits} credits</strong>
-                  </div>
-                  <div className="credit-worth">
-                    <DollarSign size={20} />
-                    <div>
-                      <div className="worth-value">₹{results.worth}</div>
-                      <div className="worth-label">Estimated Worth (@₹15/credit)</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </div>
 

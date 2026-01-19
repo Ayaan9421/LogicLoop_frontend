@@ -1,10 +1,14 @@
+/* ============================================
+   FILE 3: App.jsx (UPDATED)
+   ============================================ */
+
 import React, { useState } from 'react';
 import { Bell, MessageSquare } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Reports from './components/Report';
 import Calculator from './components/Calculator';
-import MethanePlanning from './components/MethanPlanning';
+import MethanePlanning from './components/MethanPlanning'; // CORRECTED IMPORT
 import Scenarios from './components/Scenarios';
 import RiskManagement from './components/RiskManagement';
 import Settings from './components/Settings';
