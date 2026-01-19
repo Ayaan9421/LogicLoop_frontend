@@ -10,7 +10,7 @@ import {
   Trees,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  TrendingDown // Add this import
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -20,6 +20,7 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
     { icon: Calculator, label: 'Calculator', id: 'calculator' },
     { icon: Wind, label: 'Methane Planning', id: 'methane' },
     { icon: Layers, label: 'Scenarios', id: 'scenarios' },
+    { icon: TrendingDown, label: 'Gap Analysis', id: 'gap-analysis' }, // Add this line
     { icon: FileText, label: 'Reports', id: 'reports' }
   ];
 
@@ -32,10 +33,9 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div
-  className="logo-container"
-  onClick={() => isCollapsed && toggleSidebar()}
->
-
+          className="logo-container"
+          onClick={() => isCollapsed && toggleSidebar()}
+        >
           <div className="logo-icon">
             <Trees size={24} color="white" />
           </div>
@@ -46,16 +46,15 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
             </div>
           )}
         </div>
-       {!isCollapsed && (
-  <button
-    className="close-btn"
-    onClick={toggleSidebar}
-    title="Collapse"
-  >
-    <ChevronLeft size={20} />
-  </button>
-)}
-
+        {!isCollapsed && (
+          <button
+            className="close-btn"
+            onClick={toggleSidebar}
+            title="Collapse"
+          >
+            <ChevronLeft size={20} />
+          </button>
+        )}
       </div>
 
       <div className="menu-section">

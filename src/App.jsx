@@ -8,6 +8,7 @@ import MethanePlanning from './components/MethanPlanning';
 import Scenarios from './components/Scenarios';
 import RiskManagement from './components/RiskManagement';
 import Settings from './components/Settings';
+import GapAnalysis from './components/GapAnalysis.jsx';
 
 import './App.css';
 
@@ -30,10 +31,10 @@ const App = () => {
       
       <div className="main-content">
         <div className="topbar">
-          <div className="search-bar">
-            <Search size={18} color="#94a3b8" />
-            <input type="text" placeholder="Search reports..." />
-          </div>
+          <div className="page-title">
+  {activePage.replace('-', ' ').toUpperCase()}
+</div>
+
 
           <div className="topbar-right">
             <button className="icon-btn">
@@ -53,6 +54,7 @@ const App = () => {
         {activePage === 'scenarios' && <Scenarios />}
         {activePage === 'risk' && <RiskManagement />}
         {activePage === 'settings' && <Settings />}
+        {activePage === 'gap-analysis' && <GapAnalysis onBack={() => setActivePage('dashboard')} />}
       </div>
     </div>
   );
