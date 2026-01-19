@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, MessageSquare } from 'lucide-react';
+import { Bell, MessageSquare } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Reports from './components/Report';
@@ -8,8 +8,9 @@ import MethanePlanning from './components/MethanPlanning';
 import Scenarios from './components/Scenarios';
 import RiskManagement from './components/RiskManagement';
 import Settings from './components/Settings';
-import GapAnalysis from './components/GapAnalysis.jsx';
+import GapAnalysis from './components/GapAnalysis';
 import MineLocation from './components/MineLocation';
+import AfforestationEstimator from './components/AfforestationEstimator';
 
 import './App.css';
 
@@ -56,6 +57,7 @@ const App = () => {
         {activePage === 'risk' && <RiskManagement />}
         {activePage === 'settings' && <Settings />}
         {activePage === 'gap-analysis' && <GapAnalysis onBack={() => setActivePage('dashboard')} />}
+        {activePage === 'afforestation' && <AfforestationEstimator />}
       </div>
     </div>
   );
