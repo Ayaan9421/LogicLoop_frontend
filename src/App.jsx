@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { Search, Bell, MessageSquare } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
-import Reports from "./components/Report";
+import Reports from './components/Report';
+import Calculator from './components/Calculator';
+import MethanePlanning from './components/MethanPlanning';
+import Scenarios from './components/Scenarios';
+import RiskManagement from './components/RiskManagement';
+import Settings from './components/Settings';
 
 import './App.css';
 
 const App = () => {
-  const [isCollapsed, setIsCollapsed] = useState(true); // Start collapsed
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
 
   const toggleSidebar = () => {
@@ -43,14 +48,11 @@ const App = () => {
 
         {activePage === 'dashboard' && <Dashboard />}
         {activePage === 'reports' && <Reports />}
-        {activePage !== 'dashboard' && activePage !== 'reports' && (
-          <div className="dashboard-content">
-            <div className="page-header">
-              <h1>{activePage.charAt(0).toUpperCase() + activePage.slice(1)}</h1>
-              <p>This page is under construction.</p>
-            </div>
-          </div>
-        )}
+        {activePage === 'calculator' && <Calculator />}
+        {activePage === 'methane' && <MethanePlanning />}
+        {activePage === 'scenarios' && <Scenarios />}
+        {activePage === 'risk' && <RiskManagement />}
+        {activePage === 'settings' && <Settings />}
       </div>
     </div>
   );
