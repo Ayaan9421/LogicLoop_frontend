@@ -105,10 +105,7 @@ const AfforestationEstimator = () => {
         <p>Calculate land area and plantation requirements to offset residual emissions through strategic afforestation.</p>
       </div>
 
-      <div className="info-banner">
-        <Info size={20} />
-        <span>This calculator estimates afforestation needs based on carbon sequestration rates and land availability. Actual results may vary based on local conditions.</span>
-      </div>
+      
 
       <div className="content-grid">
         <div className="input-section">
