@@ -350,7 +350,7 @@
   .scenario-selector {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .scenario-content-grid {
     grid-template-columns: 1fr;
   }
@@ -360,15 +360,15 @@
   .scenario-selector {
     grid-template-columns: 1fr;
   }
-  
+
   .scenario-results {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .timeline-chart {
     height: 200px;
   }
-  
+
   .timeline-bar-container {
     height: 140px;
   }

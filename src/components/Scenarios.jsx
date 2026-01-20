@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
 import { Layers, TrendingDown, TrendingUp, Zap, Trees, Plus, Play, Save } from 'lucide-react';
 import './Scenarios.css';
+import { runSimulation } from "../api/simulation";
+
 
 const Scenarios = () => {
   const [selectedScenario, setSelectedScenario] = useState('baseline');
   const [electricityAdoption, setElectricityAdoption] = useState(20);
   const [afforestation, setAfforestation] = useState(145);
   const [renewableEnergy, setRenewableEnergy] = useState(15);
+  const [years, setYears] = useState(5);
+  const [visibleYears, setVisibleYears] = useState([]); // 🔴 CHANGE
+
+
+  const [simulationResult, setSimulationResult] = useState(null); // 🔴 CHANGE
+  const [loading, setLoading] = useState(false);
+
+  const BASELINE_TOTAL = simulationResult
+    ? simulationResult.baseline_total
+    : 19300; // fallback
 
   const scenarios = {
     baseline: {
@@ -39,9 +51,104 @@ const Scenarios = () => {
     }
   };
 
-  const current = scenarios[selectedScenario];
-  current.net = current.emissions - current.sinks;
-  const reduction = ((1 - current.net / 1055) * 100).toFixed(1);
+  // 🔴 CHANGE: use backend result if available
+  const current = simulationResult
+    ? {
+      emissions: Math.round(simulationResult.final_emissions),
+      sinks: afforestation,
+      net: Math.round(simulationResult.final_emissions - afforestation),
+      description: 'Backend-simulated scenario'
+    }
+    : scenarios[selectedScenario];
+
+  const reduction = (
+    (1 - current.net / BASELINE_TOTAL) * 100
+  ).toFixed(1);
+
+  // 🔴 CHANGE: build backend interventions from UI
+  const buildInterventions = () => {
+    if (selectedScenario === "baseline") return [];
+
+    if (selectedScenario === "moderate") {
+      return [
+        {
+          name: "Electrification",
+          target_agents: ["HEMM Fleet"],
+          adoption_rate: 0.5,
+          efficiency: 0.9,
+          start_year: 1
+        },
+        {
+          name: "Renewable Energy",
+          target_agents: ["Grid Electricity"],
+          adoption_rate: 0.3,
+          efficiency: 0.7,
+          start_year: 1
+        }
+      ];
+    }
+
+    if (selectedScenario === "aggressive") {
+      return [
+        {
+          name: "Electrification",
+          target_agents: ["HEMM Fleet"],
+          adoption_rate: 0.8,
+          efficiency: 0.9,
+          start_year: 1
+        },
+        {
+          name: "Renewable Energy",
+          target_agents: ["Grid Electricity"],
+          adoption_rate: 0.6,
+          efficiency: 0.7,
+          start_year: 1
+        }
+      ];
+    }
+
+    // custom
+    return [
+      {
+        name: "Electrification",
+        target_agents: ["HEMM Fleet"],
+        adoption_rate: electricityAdoption / 100,
+        efficiency: 0.9,
+        start_year: 1
+      },
+      {
+        name: "Renewable Energy",
+        target_agents: ["Grid Electricity"],
+        adoption_rate: renewableEnergy / 100,
+        efficiency: 0.7,
+        start_year: 1
+      }
+    ];
+  };
+
+  // 🔴 CHANGE: run backend simulation
+  const runScenario = async () => {
+    setLoading(true);
+    setVisibleYears([]);
+
+    try {
+      const interventions = buildInterventions();
+      const res = await runSimulation(interventions, years);
+      setSimulationResult(res);
+
+      // 🔴 CHANGE: year-by-year playback
+      for (let i = 0; i < res.timeline.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 700));
+        setVisibleYears(v => [...v, res.timeline[i]]);
+      }
+
+
+    } catch (e) {
+      alert("Simulation failed. Backend not reachab le.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="scenarios-page">
@@ -57,7 +164,7 @@ const Scenarios = () => {
       </div>
 
       <div className="scenario-selector">
-        <button 
+        <button
           className={`scenario-btn ${selectedScenario === 'baseline' ? 'active' : ''}`}
           onClick={() => setSelectedScenario('baseline')}
         >
@@ -67,7 +174,7 @@ const Scenarios = () => {
             <div className="scenario-btn-subtitle">Current State</div>
           </div>
         </button>
-        <button 
+        <button
           className={`scenario-btn ${selectedScenario === 'moderate' ? 'active' : ''}`}
           onClick={() => setSelectedScenario('moderate')}
         >
@@ -77,7 +184,7 @@ const Scenarios = () => {
             <div className="scenario-btn-subtitle">30-50% Reduction</div>
           </div>
         </button>
-        <button 
+        <button
           className={`scenario-btn ${selectedScenario === 'aggressive' ? 'active' : ''}`}
           onClick={() => setSelectedScenario('aggressive')}
         >
@@ -87,7 +194,7 @@ const Scenarios = () => {
             <div className="scenario-btn-subtitle">60-80% Reduction</div>
           </div>
         </button>
-        <button 
+        <button
           className={`scenario-btn ${selectedScenario === 'custom' ? 'active' : ''}`}
           onClick={() => setSelectedScenario('custom')}
         >
@@ -186,7 +293,27 @@ const Scenarios = () => {
                   onChange={(e) => setRenewableEnergy(parseInt(e.target.value))}
                   className="slider"
                 />
-                <div className="slider-hint">Solar and wind power integration</div>
+                <div className="slider-hint">Solar and wind power integration</div>\
+                {/* 🔴 CHANGE: Simulation horizon selector */}
+                <div className="slider-group">
+                  <div className="slider-header">
+                    <label>Simulation Horizon</label>
+                    <span className="slider-value">{years} years</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={years}
+                    onChange={(e) => setYears(parseInt(e.target.value))}
+                    className="slider"
+                  />
+                  <div className="slider-hint">
+                    Longer horizons show compounding mitigation impact
+                  </div>
+                </div>
+
+
               </div>
             </div>
           ) : (
@@ -205,8 +332,8 @@ const Scenarios = () => {
                 </div>
                 <div className="intervention-impact">
                   {selectedScenario === 'baseline' && '0%'}
-                  {selectedScenario === 'moderate' && '-180 kt'}
-                  {selectedScenario === 'aggressive' && '-360 kt'}
+                  {selectedScenario === 'moderate' && '≈50% adoption'}
+                  {selectedScenario === 'aggressive' && '≈80% adoption'}
                 </div>
               </div>
 
@@ -243,42 +370,62 @@ const Scenarios = () => {
                 </div>
                 <div className="intervention-impact">
                   {selectedScenario === 'baseline' && '0%'}
-                  {selectedScenario === 'moderate' && '-120 kt'}
-                  {selectedScenario === 'aggressive' && '-240 kt'}
+                  {selectedScenario === 'moderate' && '≈30% renewable share'}
+                  {selectedScenario === 'aggressive' && '≈60% renewable share'}
                 </div>
               </div>
+              {/* 🔴 CHANGE: Simulation horizon selector */}
+              <div className="slider-group">
+                <div className="slider-header">
+                  <label>Simulation Horizon</label>
+                  <span className="slider-value">{years} years</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={years}
+                  onChange={(e) => setYears(parseInt(e.target.value))}
+                  className="slider"
+                />
+                <div className="slider-hint">
+                  Longer horizons show compounding mitigation impact
+                </div>
+              </div>
+
             </div>
           )}
 
-          <button className="btn-run-scenario">
+          {/* 🔴 CHANGE: backend-triggered simulation */}
+          <button className="btn-run-scenario" onClick={runScenario} disabled={loading}>
             <Play size={18} />
-            Run Scenario Analysis
+            {loading ? "Running Simulation..." : "Run Scenario Analysis"}
           </button>
         </div>
 
         <div className="timeline-card">
           <div className="card-header">
             <h3>Emission Projection Timeline</h3>
-            <p className="card-subtitle">2026-2070 Net Zero Pathway</p>
+            <p className="card-subtitle">2026-{2026 + years} Net Zero Pathway</p>
           </div>
 
           <div className="timeline-chart">
-            {['2026', '2035', '2045', '2055', '2070'].map((year, idx) => {
-              const progress = [100, 75, 50, 25, 0][idx];
-              const emissions = Math.round(current.net * (progress / 100));
-              return (
-                <div key={year} className="timeline-year">
-                  <div className="timeline-bar-container">
-                    <div 
-                      className="timeline-bar"
-                      style={{ height: `${progress}%` }}
-                    ></div>
-                  </div>
-                  <div className="timeline-label">{year}</div>
-                  <div className="timeline-value">{emissions}kt</div>
+            {visibleYears.map((t) => (
+              <div key={t.year} className="timeline-year">
+                <div className="timeline-bar-container">
+                  <div
+                    className="timeline-bar"
+                    style={{
+                      height: `${(t.emissions / simulationResult.baseline_total) * 100}%`
+                    }}
+                  ></div>
                 </div>
-              );
-            })}
+                <div className="timeline-label">Year {t.year}</div>
+                <div className="timeline-value">
+                  {Math.round(t.emissions)} ktCO₂
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="timeline-footer">
