@@ -147,7 +147,7 @@ const Calculator = () => {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://localhost:8000/parse-input", {
+      const res = await fetch("https://coletta-snouted-rigoberto.ngrok-free.dev/parse-input", {
         method: "POST",
         body: formData
       });
