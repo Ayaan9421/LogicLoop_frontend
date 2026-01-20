@@ -1,0 +1,387 @@
+/* MineLocation.css */
+
+/* Main Container */
+.mine-location-container {
+  width: 100%;
+  height: calc(100vh - 72px);
+  position: relative;
+  background: #f8fafc;
+}
+
+/* Hamburger Button */
+.mine-hamburger-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: white;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mine-hamburger-btn:hover {
+  background: #f8fafc;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Sidebar */
+.mines-sidebar {
+  position: absolute;
+  top: 0;
+  left: -380px;
+  width: 380px;
+  height: 100%;
+  background: white;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  transition: left 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e2e8f0;
+}
+
+.mines-sidebar-open {
+  left: 0;
+}
+
+.mines-sidebar-header {
+  padding: 24px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mines-sidebar-header h2 {
+  font-size: 20px;
+  margin: 0;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.mines-close-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 32px;
+  cursor: pointer;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.mines-close-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.mines-search-input {
+  margin: 16px 24px;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  width: calc(100% - 48px);
+  background: #f8fafc;
+  transition: all 0.2s;
+}
+
+.mines-search-input:focus {
+  outline: none;
+  border-color: #10b981;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.mines-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 16px;
+}
+
+.mine-list-item {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+  background: white;
+}
+
+.mine-list-item:hover {
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  transform: translateY(-2px);
+}
+
+.mine-list-name {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.mine-list-location {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Modal */
+.mine-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.mine-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.mine-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.mine-modal-close:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.mine-modal-title {
+  padding: 24px 24px 16px;
+  font-size: 24px;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  margin: 0;
+  font-weight: 600;
+}
+
+.mine-info-section {
+  padding: 24px;
+}
+
+.mine-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.mine-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mine-info-label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.mine-info-value {
+  font-size: 15px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.mine-stats-section {
+  padding: 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mine-stats-section h3 {
+  font-size: 18px;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+
+.mine-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.mine-stat-card {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.mine-stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.mine-stat-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.mine-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.mine-chart-section {
+  padding: 24px;
+}
+
+.mine-chart-section h3 {
+  font-size: 18px;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+
+.mine-chart-container {
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Leaflet Container */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 0;
+}
+
+/* Leaflet Controls */
+.leaflet-top.leaflet-left {
+  top: 90px !important;
+  left: 20px !important;
+}
+
+.leaflet-control-layers {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.leaflet-control-zoom {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.leaflet-control-zoom a {
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-size: 20px !important;
+  border: none !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mines-sidebar {
+    width: 100%;
+    left: -100%;
+  }
+
+  .mine-modal-content {
+    margin: 10px;
+    max-height: 95vh;
+  }
+
+  .mine-stats-grid,
+  .mine-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mine-chart-container {
+    height: 280px;
+  }
+
+  .mine-hamburger-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mines-sidebar-header {
+    padding: 16px;
+  }
+
+  .mines-search-input {
+    margin: 12px 16px;
+    width: calc(100% - 32px);
+  }
+
+  .mine-modal-title {
+    font-size: 20px;
+    padding: 20px 20px 12px;
+  }
+
+  .mine-info-section,
+  .mine-stats-section,
+  .mine-chart-section {
+    padding: 16px;
+  }
+}

@@ -1,248 +1,332 @@
-import React, { useState } from 'react';
-import { Wind, AlertTriangle, TrendingDown, MapPin, Clock, CheckCircle } from 'lucide-react';
-import './MethanPlanning.css';
+// components/MethanePlanning.jsx
+import React, { useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  LabelList,
+} from "recharts";
+import "./MethanPlanning.css";
 
 const MethanePlanning = () => {
-  const [activeZone, setActiveZone] = useState('all');
+  const [panels, setPanels] = useState([
+    {
+      name: "A",
+      seam_depth: "",
+      seam_thickness: "",
+      gas_class: "",
+      incident_rate: "",
+      shutdowns: "",
+      production_rate: "",
+      ventilation_capacity: "",
+    },
+  ]);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const zones = [
-    { id: 'zone-a', name: 'Zone A', risk: 'high', concentration: '7.8%', status: 'critical', incidents: 3 },
-    { id: 'zone-b', name: 'Zone B', risk: 'medium', concentration: '4.2%', status: 'warning', incidents: 1 },
-    { id: 'zone-c', name: 'Zone C', risk: 'low', concentration: '1.5%', status: 'safe', incidents: 0 },
-    { id: 'zone-d', name: 'Zone D', risk: 'medium', concentration: '3.8%', status: 'warning', incidents: 2 }
+  const inputConfig = [
+    { field: "name", label: "Name", type: "text" },
+    { field: "seam_depth", label: "Seam Depth (m)", type: "number", min: 0, max: 2000 },
+    { field: "seam_thickness", label: "Thickness (m)", type: "number", min: 1, max: 10 },
+    { field: "gas_class", label: "Gas Class (1–5)", type: "number", min: 1, max: 5 },
+    { field: "incident_rate", label: "Incident Rate", type: "number", min: 0, max: 10 },
+    { field: "shutdowns", label: "Shutdowns", type: "number", min: 0, max: 5 },
+    { field: "production_rate", label: "Production Rate (t/day)", type: "number", min: 0, max: 5000 },
+    { field: "ventilation_capacity", label: "Ventilation Capacity (m³/min)", type: "number", min: 1000, max: 5000 },
   ];
 
-  const mitigationActions = [
-    {
-      action: 'Upgrade Ventilation System',
-      zone: 'Zone A',
-      priority: 'critical',
-      progress: 65,
-      deadline: 'Jan 25, 2026',
-      assignee: 'Engineering Team'
-    },
-    {
-      action: 'Install Additional CH4 Sensors',
-      zone: 'Zone D',
-      priority: 'high',
-      progress: 40,
-      deadline: 'Jan 30, 2026',
-      assignee: 'Safety Team'
-    },
-    {
-      action: 'Conduct Emergency Drill',
-      zone: 'All Zones',
-      priority: 'medium',
-      progress: 100,
-      deadline: 'Completed',
-      assignee: 'Operations'
-    },
-    {
-      action: 'Sensor Calibration Routine',
-      zone: 'Zone B',
-      priority: 'low',
-      progress: 80,
-      deadline: 'Feb 05, 2026',
-      assignee: 'Maintenance'
+  const handleChange = (index, field, value) => {
+    const newPanels = [...panels];
+    newPanels[index][field] = value;
+    setPanels(newPanels);
+  };
+
+  const addPanel = () => {
+    setPanels([
+      ...panels,
+      {
+        name: `P${panels.length + 1}`,
+        seam_depth: "",
+        seam_thickness: "",
+        gas_class: "",
+        incident_rate: "",
+        shutdowns: "",
+        production_rate: "",
+        ventilation_capacity: "",
+      },
+    ]);
+  };
+
+  const removePanel = (index) => {
+    if (panels.length > 1) {
+      const newPanels = panels.filter((_, i) => i !== index);
+      setPanels(newPanels);
     }
-  ];
+  };
 
-  const filteredActions = activeZone === 'all' 
-    ? mitigationActions 
-    : mitigationActions.filter(a => a.zone.toLowerCase().includes(activeZone.toLowerCase()) || a.zone === 'All Zones');
+  const runOptimization = async () => {
+    setLoading(true);
+    try {
+      const formattedPanels = panels.map((p) => ({
+        name: p.name,
+        seam_depth: parseFloat(p.seam_depth),
+        seam_thickness: parseFloat(p.seam_thickness),
+        gas_class: parseFloat(p.gas_class),
+        incident_rate: parseFloat(p.incident_rate),
+        shutdowns: parseFloat(p.shutdowns),
+        production_rate: parseFloat(p.production_rate),
+        ventilation_capacity: parseFloat(p.ventilation_capacity),
+      }));
+
+      const res = await fetch("http://localhost:5000/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ panels: formattedPanels }),
+      });
+
+      if (!res.ok) throw new Error("Backend fetch failed");
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sequenceChartData = () => {
+    if (!result) return [];
+    return [
+      { sequence: "Baseline", total_methane: result.baseline.total_methane },
+      { sequence: "Optimized", total_methane: result.optimized.total_methane },
+    ];
+  };
+
+  const panelLineChartData = () => {
+    if (!result) return [];
+    return result.optimized.sequence.map((panelName) => {
+      const panel = result.optimized.panel_scores.find((p) => p.name === panelName);
+      return {
+        name: panel.name,
+        methane: panel.final_score,
+      };
+    });
+  };
+
+  const comparisonChartData = () => {
+    if (!result) return [];
+    
+    const baselineMap = new Map(
+      result.baseline.panel_scores.map(p => [p.name, p.final_score])
+    );
+    
+    const optimizedMap = new Map(
+      result.optimized.panel_scores.map(p => [p.name, p.final_score])
+    );
+    
+    const allPanels = [...new Set([
+      ...result.baseline.panel_scores.map(p => p.name),
+      ...result.optimized.panel_scores.map(p => p.name)
+    ])];
+    
+    return allPanels.map(name => ({
+      name,
+      baseline: baselineMap.get(name) || 0,
+      optimized: optimizedMap.get(name) || 0,
+    }));
+  };
 
   return (
-    <div className="methane-page">
-      <div className="page-header-section">
-        <div>
-          <div className="breadcrumb-small">
-            <span>Home</span>
-            <span>/</span>
-            <span>Methane Planning</span>
+    <div className="methane-planning">
+      {/* Input Section */}
+      <div className="mp-input-section">
+        <div className="mp-section-header">
+          <div>
+            <h2>Panel Data Input</h2>
+            <p>Enter mining panel parameters for optimization analysis</p>
           </div>
-          <h1>Methane Risk Management & Planning</h1>
-          <p>Monitor methane concentrations, assess risks, and track mitigation strategies across mine zones</p>
+          <button className="mp-btn-add" onClick={addPanel}>
+            + Add Panel
+          </button>
         </div>
-        <button className="btn-primary">
-          <AlertTriangle size={20} />
-          Create Safety Alert
+
+        <div className="mp-panels-container">
+          {panels.map((panel, index) => (
+            <div key={index} className="mp-panel-card">
+              <div className="mp-panel-header">
+                <h3>Panel {index + 1}</h3>
+                {panels.length > 1 && (
+                  <button 
+                    className="mp-btn-remove" 
+                    onClick={() => removePanel(index)}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              
+              <div className="mp-input-grid">
+                {inputConfig.map((config) => (
+                  <div key={config.field} className="mp-input-field">
+                    <label>{config.label}</label>
+                    <input
+                      type={config.type}
+                      value={panel[config.field]}
+                      min={config.min}
+                      max={config.max}
+                      placeholder={config.min !== undefined ? `${config.min}-${config.max}` : ""}
+                      onChange={(e) => handleChange(index, config.field, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button 
+          className={`mp-btn-optimize ${loading ? 'loading' : ''}`}
+          onClick={runOptimization} 
+          disabled={loading}
+        >
+          {loading ? "Running Optimization..." : "Run Optimization"}
         </button>
       </div>
 
-      <div className="metrics-grid-methane">
-        <div className="metric-card-methane alert">
-          <div className="metric-icon">
-            <Wind size={28} color="#f59e0b" />
-          </div>
-          <div className="metric-badge-alert">High Risk</div>
-          <div className="metric-label">Average CH4 Concentration</div>
-          <div className="metric-value">
-            4.3<span className="metric-unit">%</span>
-          </div>
-          <div className="metric-target">Threshold: 2% CH4</div>
-        </div>
-
-        <div className="metric-card-methane">
-          <div className="metric-icon">
-            <AlertTriangle size={28} color="#64748b" />
-          </div>
-          <div className="metric-label">Active Risk Zones</div>
-          <div className="metric-value">2</div>
-          <div className="metric-target">Out of 4 zones</div>
-        </div>
-
-        <div className="metric-card-methane success">
-          <div className="metric-icon">
-            <TrendingDown size={28} color="#10b981" />
-          </div>
-          <div className="metric-badge-success">Improving</div>
-          <div className="metric-label">Incident Reduction</div>
-          <div className="metric-value">
-            25<span className="metric-unit">%</span>
-          </div>
-          <div className="metric-target">vs. Last Quarter</div>
-        </div>
-
-        <div className="metric-card-methane">
-          <div className="metric-icon">
-            <CheckCircle size={28} color="#64748b" />
-          </div>
-          <div className="metric-label">Mitigation Actions</div>
-          <div className="metric-value">12</div>
-          <div className="metric-target">8 completed, 4 ongoing</div>
-        </div>
-      </div>
-
-      <div className="methane-content-grid">
-        <div className="zones-card">
-          <div className="card-header">
-            <div>
-              <h3>Zone Risk Assessment</h3>
-              <p className="card-subtitle">Real-time methane concentration by zone</p>
-            </div>
-            <div className="zone-filter">
-              <button 
-                className={`filter-tab ${activeZone === 'all' ? 'active' : ''}`}
-                onClick={() => setActiveZone('all')}
-              >
-                All
-              </button>
-              <button 
-                className={`filter-tab ${activeZone === 'zone-a' ? 'active' : ''}`}
-                onClick={() => setActiveZone('zone-a')}
-              >
-                Zone A
-              </button>
-              <button 
-                className={`filter-tab ${activeZone === 'zone-b' ? 'active' : ''}`}
-                onClick={() => setActiveZone('zone-b')}
-              >
-                Zone B
-              </button>
-            </div>
-          </div>
-
-          <div className="zones-list">
-            {zones.map((zone) => (
-              <div key={zone.id} className={`zone-item ${zone.status}`}>
-                <div className="zone-header">
-                  <div className="zone-name">
-                    <MapPin size={18} />
-                    <span>{zone.name}</span>
-                  </div>
-                  <div className={`zone-badge ${zone.status}`}>
-                    {zone.status === 'critical' && 'CRITICAL'}
-                    {zone.status === 'warning' && 'WARNING'}
-                    {zone.status === 'safe' && 'SAFE'}
-                  </div>
-                </div>
-                <div className="zone-metrics">
-                  <div className="zone-metric">
-                    <span className="metric-label-small">CH4 Level</span>
-                    <span className="metric-value-small">{zone.concentration}</span>
-                  </div>
-                  <div className="zone-metric">
-                    <span className="metric-label-small">Risk Level</span>
-                    <span className="metric-value-small">{zone.risk.toUpperCase()}</span>
-                  </div>
-                  <div className="zone-metric">
-                    <span className="metric-label-small">Incidents</span>
-                    <span className="metric-value-small">{zone.incidents}</span>
-                  </div>
-                </div>
+      {/* Results */}
+      {result && (
+        <>
+          <div className="mp-results-section">
+            <div className="mp-results-header">
+              <div>
+                <h2>Optimization Results</h2>
+                <p>Comparative analysis of baseline vs. optimized sequences</p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="actions-list-card">
-          <div className="card-header">
-            <h3>Mitigation Actions Tracker</h3>
-          </div>
-
-          <div className="actions-list">
-            {filteredActions.map((action, index) => (
-              <div key={index} className="action-item-methane">
-                <div className="action-header-row">
-                  <span className="action-title">{action.action}</span>
-                  <span className={`priority-badge ${action.priority}`}>
-                    {action.priority.toUpperCase()}
-                  </span>
-                </div>
-                <div className="action-details">
-                  <span className="action-detail">
-                    <MapPin size={14} />
-                    {action.zone}
-                  </span>
-                  <span className="action-detail">
-                    <Clock size={14} />
-                    {action.deadline}
-                  </span>
-                </div>
-                <div className="action-progress">
-                  <div className="progress-bar-bg">
-                    <div 
-                      className="progress-bar-fill-methane" 
-                      style={{ width: `${action.progress}%` }}
-                    ></div>
-                  </div>
-                  <span className="progress-text">{action.progress}%</span>
-                </div>
-                <div className="action-assignee">Assigned: {action.assignee}</div>
+              <div className="mp-reduction-badge">
+                <span className="mp-reduction-label">Reduction Achieved</span>
+                <span className="mp-reduction-value">{result.reduction_percent.toFixed(2)}%</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
+            </div>
 
-      <div className="monitoring-card">
-        <div className="card-header">
-          <h3>Sensor Network Status</h3>
-          <p className="card-subtitle">30 sensors active across 4 zones</p>
-        </div>
-        <div className="sensor-grid">
-          <div className="sensor-stat">
-            <div className="stat-value">28</div>
-            <div className="stat-label">Online</div>
-            <div className="stat-indicator online"></div>
+            <h3 className="mp-chart-title">Total Methane Emissions Comparison</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={sequenceChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="sequence" stroke="#64748b" style={{ fontSize: '13px' }} />
+                <YAxis stroke="#64748b" style={{ fontSize: '13px' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}
+                  formatter={(value) => [value.toFixed(3), "Total Methane"]} 
+                />
+                <Legend wrapperStyle={{ fontSize: '13px' }} />
+                <Bar dataKey="total_methane" fill="#3b82f6" radius={[8, 8, 0, 0]}>
+                  <LabelList 
+                    dataKey="total_methane" 
+                    position="top" 
+                    formatter={(val) => val.toFixed(3)} 
+                    style={{ fontSize: '12px', fontWeight: '600' }} 
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <div className="sensor-stat">
-            <div className="stat-value">2</div>
-            <div className="stat-label">Offline</div>
-            <div className="stat-indicator offline"></div>
+
+          <div className="mp-sequences-grid">
+            <div className="mp-sequence-card baseline">
+              <h4>Baseline Sequence</h4>
+              <div className="mp-sequence-flow">
+                {result.baseline.sequence.map((panel, idx) => (
+                  <React.Fragment key={idx}>
+                    <span className="mp-sequence-panel">{panel}</span>
+                    {idx < result.baseline.sequence.length - 1 && (
+                      <span className="mp-sequence-arrow">→</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mp-sequence-card optimized">
+              <h4>Optimized Sequence</h4>
+              <div className="mp-sequence-flow">
+                {result.optimized.sequence.map((panel, idx) => (
+                  <React.Fragment key={idx}>
+                    <span className="mp-sequence-panel">{panel}</span>
+                    {idx < result.optimized.sequence.length - 1 && (
+                      <span className="mp-sequence-arrow">→</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="sensor-stat">
-            <div className="stat-value">0</div>
-            <div className="stat-label">Maintenance</div>
-            <div className="stat-indicator maintenance"></div>
+
+          <div className="mp-chart-section">
+            <h3 className="mp-chart-title">Panel Methane Contribution: Baseline vs Optimized</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={comparisonChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '13px' }} />
+                <YAxis stroke="#64748b" style={{ fontSize: '13px' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}
+                  formatter={(value) => [value.toFixed(3), "Methane"]} 
+                />
+                <Legend wrapperStyle={{ fontSize: '13px' }} />
+                <Bar dataKey="baseline" fill="#ef4444" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="optimized" fill="#10b981" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <div className="sensor-stat">
-            <div className="stat-value">93%</div>
-            <div className="stat-label">Uptime</div>
-            <div className="stat-indicator success"></div>
+
+          <div className="mp-chart-section">
+            <h3 className="mp-chart-title">Methane Contribution by Panel Order (Optimized)</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={panelLineChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '13px' }} />
+                <YAxis stroke="#64748b" style={{ fontSize: '13px' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}
+                  formatter={(value) => [value.toFixed(3), "Methane"]} 
+                />
+                <Legend wrapperStyle={{ fontSize: '13px' }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="methane" 
+                  stroke="#8b5cf6" 
+                  strokeWidth={3}
+                  dot={{ fill: '#8b5cf6', r: 5 }}
+                  activeDot={{ r: 7 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 };

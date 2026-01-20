@@ -10,17 +10,23 @@ import {
   Trees,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  TrendingDown,
+  Map,
+  Sprout,
+  Database
 } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
   const mainMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
+    { icon: Map, label: 'Mine Locations', id: 'mines' },
     { icon: Calculator, label: 'Calculator', id: 'calculator' },
     { icon: Wind, label: 'Methane Planning', id: 'methane' },
     { icon: Layers, label: 'Scenarios', id: 'scenarios' },
-    { icon: FileText, label: 'Reports', id: 'reports' }
+    { icon: TrendingDown, label: 'Gap Analysis', id: 'gap-analysis' },
+    { icon: Sprout, label: 'Afforestation', id: 'afforestation' },
+    { icon: Database, label: 'Carbon Sink', id: 'carbon-sink' }
   ];
 
   const systemMenuItems = [
@@ -32,10 +38,9 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div
-  className="logo-container"
-  onClick={() => isCollapsed && toggleSidebar()}
->
-
+          className="logo-container"
+          onClick={() => isCollapsed && toggleSidebar()}
+        >
           <div className="logo-icon">
             <Trees size={24} color="white" />
           </div>
@@ -46,16 +51,15 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
             </div>
           )}
         </div>
-       {!isCollapsed && (
-  <button
-    className="close-btn"
-    onClick={toggleSidebar}
-    title="Collapse"
-  >
-    <ChevronLeft size={20} />
-  </button>
-)}
-
+        {!isCollapsed && (
+          <button
+            className="close-btn"
+            onClick={toggleSidebar}
+            title="Collapse"
+          >
+            <ChevronLeft size={20} />
+          </button>
+        )}
       </div>
 
       <div className="menu-section">

@@ -84,11 +84,7 @@ const RiskManagement = () => {
     <div className="risk-page">
       <div className="page-header-section">
         <div>
-          <div className="breadcrumb-small">
-            <span>Home</span>
-            <span>/</span>
-            <span>Risk Management</span>
-          </div>
+
           <h1>Risk Management Dashboard</h1>
           <p>Identify, assess, and mitigate operational and environmental risks</p>
         </div>
