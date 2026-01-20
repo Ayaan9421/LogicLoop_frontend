@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Trees, 
   MapPin, 
@@ -14,6 +14,153 @@ import {
 import './AfforestationEstimator.css';
 
 const AfforestationEstimator = () => {
+  const emissionData = [
+    {
+      sno: 1,
+      mine_name: "A SHYAMSUNOERPURA",
+      state: "West Bengal",
+      district: "Paschim Bardhaman",
+      owner: "ECL",
+      govt_private: "G",
+      mine_type: "UG",
+      latitude: 23.6483,
+      longitude: 87.2575,
+      sink_area: 600,
+      coal_extracted: 830000,
+      fuel_emission: 33366000,
+      electricity_emission: 300792,
+      total_emission: 33666792,
+      methane_emission: 8300000,
+      solar: "1916 kwh/m2/year"
+    },
+    {
+      sno: 2,
+      mine_name: "ALP",
+      state: "Telangana",
+      district: "Mancherial",
+      owner: "SCCL",
+      govt_private: "SG",
+      mine_type: "UG",
+      latitude: 18.6648,
+      longitude: 79.579,
+      sink_area: 750,
+      coal_extracted: 2060188,
+      fuel_emission: 77298253.76,
+      electricity_emission: 746612.13,
+      total_emission: 78044865.89,
+      methane_emission: 20601880,
+      solar: "1720 kwh/m2/year"
+    },
+    {
+      sno: 3,
+      mine_name: "AMALGAMATED KESHALPUR WEST MUDIDIH COLLIERY (AKWMC)",
+      state: "Jharkhand",
+      district: "Dhanbad",
+      owner: "BCCL",
+      govt_private: "G",
+      mine_type: "Mixed",
+      latitude: 23.8078,
+      longitude: 86.3221,
+      sink_area: 700,
+      coal_extracted: 4220000,
+      fuel_emission: 113096000,
+      electricity_emission: 1338162,
+      total_emission: 114434162,
+      methane_emission: 59080000,
+      solar: "1800 kwh/m2/year"
+    },
+    {
+      sno: 4,
+      mine_name: "BANGWARA",
+      state: "Madhya Pradesh",
+      district: "Shahdol",
+      owner: "SECL",
+      govt_private: "G",
+      mine_type: "UG",
+      latitude: 23.1542,
+      longitude: 81.5361,
+      sink_area: 850,
+      coal_extracted: 650000,
+      fuel_emission: 27872000,
+      electricity_emission: 294450,
+      total_emission: 28166450,
+      methane_emission: 9100000,
+      solar: "1700 kwh/m2/year"
+    },
+    {
+      sno: 5,
+      mine_name: "BANSRA",
+      state: "West Bengal",
+      district: "Paschim Bardhaman",
+      owner: "ECL",
+      govt_private: "G",
+      mine_type: "Mixed",
+      latitude: 23.6296,
+      longitude: 87.1382,
+      sink_area: 850,
+      coal_extracted: 730000,
+      fuel_emission: 11738400,
+      electricity_emission: 198414,
+      total_emission: 11936814,
+      methane_emission: 6570000
+    },
+    {
+      sno: 6,
+      mine_name: "BHANORA W/B (UG & OC)",
+      state: "West Bengal",
+      district: "Paschim Bardhaman",
+      owner: "ECL",
+      govt_private: "G",
+      mine_type: "Mixed",
+      latitude: 23.7276,
+      longitude: 86.9943,
+      sink_area: 800,
+      coal_extracted: 480000,
+      fuel_emission: 7718400,
+      electricity_emission: 173952,
+      total_emission: 7892352,
+      methane_emission: 4800000,
+      solar: "1916 kwh/m2/year"
+    },
+    {
+      sno: 7,
+      mine_name: "BHUBANESWARI",
+      state: "Orissa",
+      district: "Angul",
+      owner: "MCL",
+      govt_private: "G",
+      mine_type: "OC",
+      latitude: 20.9725,
+      longitude: 85.1732,
+      sink_area: 700,
+      coal_extracted: 28000000,
+      fuel_emission: 525280000,
+      electricity_emission: 5073600,
+      total_emission: 530353600,
+      methane_emission: 336000000,
+      solar: "1900 kwh/m2/year"
+    },
+    {
+      sno: 13,
+      mine_name: "GEVRA OC",
+      state: "Chhattisgarh",
+      district: "Korba",
+      owner: "SECL",
+      govt_private: "G",
+      mine_type: "OC",
+      latitude: 22.3308,
+      longitude: 82.5958,
+      sink_area: 1900,
+      coal_extracted: 45000000,
+      fuel_emission: 964800000,
+      electricity_emission: 6115500,
+      total_emission: 970915500,
+      methane_emission: 765000000,
+      solar: "2007.5 kwh/m2/year"
+    }
+  ];
+
+  const [selectedMine, setSelectedMine] = useState(emissionData[0]);
   const [inputs, setInputs] = useState({
     residualEmissions: 1050000,
     sequestrationRate: 5.5,
@@ -24,6 +171,15 @@ const AfforestationEstimator = () => {
 
   const [selectedTreeType, setSelectedTreeType] = useState('mixed');
   const [selectedLandType, setSelectedLandType] = useState('degraded');
+  const canvasRef = useRef(null);
+
+  // Update residual emissions when mine changes
+  useEffect(() => {
+    setInputs(prev => ({
+      ...prev,
+      residualEmissions: Math.round(selectedMine.total_emission / 1000) // Convert to tonnes
+    }));
+  }, [selectedMine]);
 
   const treeTypes = [
     { id: 'mixed', name: 'Mixed Native', rate: 5.5, icon: '🌳' },
@@ -88,6 +244,229 @@ const AfforestationEstimator = () => {
     };
   }, [inputs, selectedLandType]);
 
+  // DBSCAN clustering algorithm
+  const dbscan = (points, eps, minPts) => {
+    const clusters = [];
+    const visited = new Set();
+    const noise = [];
+
+    const getNeighbors = (pointIdx) => {
+      const neighbors = [];
+      const [x1, y1] = points[pointIdx];
+      
+      for (let i = 0; i < points.length; i++) {
+        if (i === pointIdx) continue;
+        const [x2, y2] = points[i];
+        const dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        if (dist <= eps) {
+          neighbors.push(i);
+        }
+      }
+      return neighbors;
+    };
+
+    const expandCluster = (pointIdx, neighbors, cluster) => {
+      cluster.push(pointIdx);
+      visited.add(pointIdx);
+
+      for (let i = 0; i < neighbors.length; i++) {
+        const neighborIdx = neighbors[i];
+        
+        if (!visited.has(neighborIdx)) {
+          visited.add(neighborIdx);
+          const neighborNeighbors = getNeighbors(neighborIdx);
+          
+          if (neighborNeighbors.length >= minPts) {
+            neighbors.push(...neighborNeighbors);
+          }
+        }
+
+        let addedToCluster = false;
+        for (const c of clusters) {
+          if (c.includes(neighborIdx)) {
+            addedToCluster = true;
+            break;
+          }
+        }
+        
+        if (!addedToCluster && !cluster.includes(neighborIdx)) {
+          cluster.push(neighborIdx);
+        }
+      }
+    };
+
+    for (let i = 0; i < points.length; i++) {
+      if (visited.has(i)) continue;
+      
+      const neighbors = getNeighbors(i);
+      
+      if (neighbors.length < minPts) {
+        noise.push(i);
+        visited.add(i);
+      } else {
+        const cluster = [];
+        expandCluster(i, neighbors, cluster);
+        clusters.push(cluster);
+      }
+    }
+
+    return { clusters, noise };
+  };
+
+  // Generate tree planting locations
+  const generateTreeLocations = useMemo(() => {
+    const numTrees = Math.min(Math.round(calculations.treesWithBuffer), 500);
+    const points = [];
+    
+    const mineCenter = { x: 300, y: 300 };
+    const mineRadius = 80;
+    
+    const zones = 4;
+    const treesPerZone = Math.floor(numTrees / zones);
+    
+    for (let zone = 0; zone < zones; zone++) {
+      const angle = (zone / zones) * 2 * Math.PI;
+      const zoneDistance = mineRadius + 50 + Math.random() * 100;
+      
+      for (let i = 0; i < treesPerZone; i++) {
+        const r = zoneDistance + Math.random() * 80;
+        const theta = angle + (Math.random() - 0.5) * (2 * Math.PI / zones);
+        
+        const x = mineCenter.x + r * Math.cos(theta);
+        const y = mineCenter.y + r * Math.sin(theta);
+        
+        if (x >= 0 && x <= 600 && y >= 0 && y <= 600) {
+          points.push([x, y]);
+        }
+      }
+    }
+    
+    return { points, mineCenter, mineRadius };
+  }, [calculations.treesWithBuffer]);
+
+  // Perform DBSCAN clustering
+  const clusterData = useMemo(() => {
+    const { points } = generateTreeLocations;
+    const eps = 40;
+    const minPts = 5;
+    
+    return dbscan(points, eps, minPts);
+  }, [generateTreeLocations]);
+
+  // Draw the visualization
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const { points, mineCenter, mineRadius } = generateTreeLocations;
+    const { clusters, noise } = clusterData;
+    
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, 900, 600);
+    
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 900; i += 50) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, 600);
+      ctx.stroke();
+    }
+    for (let i = 0; i <= 600; i += 50) {
+      ctx.beginPath();
+      ctx.moveTo(0, i);
+      ctx.lineTo(900, i);
+      ctx.stroke();
+    }
+    
+    const clusterColors = [
+      '#10b981', '#3b82f6', '#f59e0b', '#ef4444', 
+      '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+    ];
+    
+    clusters.forEach((cluster, idx) => {
+      const color = clusterColors[idx % clusterColors.length];
+      
+      ctx.fillStyle = color + '15';
+      ctx.beginPath();
+      cluster.forEach((pointIdx, i) => {
+        const [x, y] = points[pointIdx];
+        const adjustedX = (x / 600) * 900;
+        if (i === 0) {
+          ctx.moveTo(adjustedX, y);
+        } else {
+          ctx.lineTo(adjustedX, y);
+        }
+      });
+      ctx.closePath();
+      ctx.fill();
+      
+      cluster.forEach(pointIdx => {
+        const [x, y] = points[pointIdx];
+        const adjustedX = (x / 600) * 900;
+        drawTree(ctx, adjustedX, y, color);
+      });
+    });
+    
+    noise.forEach(pointIdx => {
+      const [x, y] = points[pointIdx];
+      const adjustedX = (x / 600) * 900;
+      drawTree(ctx, adjustedX, y, '#94a3b8');
+    });
+    
+    const mineCenterX = (mineCenter.x / 600) * 900;
+    ctx.fillStyle = '#78716c';
+    ctx.strokeStyle = '#57534e';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(mineCenterX, mineCenter.y, mineRadius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('MINE', mineCenterX, mineCenter.y - 5);
+    ctx.font = '12px sans-serif';
+    ctx.fillText('SITE', mineCenterX, mineCenter.y + 10);
+    
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('DBSCAN Clusters:', 10, 25);
+    
+    clusters.slice(0, 4).forEach((cluster, idx) => {
+      const color = clusterColors[idx % clusterColors.length];
+      ctx.fillStyle = color;
+      ctx.fillRect(10, 35 + idx * 25, 15, 15);
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(`Cluster ${idx + 1} (${cluster.length} trees)`, 30, 47 + idx * 25);
+    });
+    
+  }, [generateTreeLocations, clusterData]);
+
+  const drawTree = (ctx, x, y, color) => {
+    ctx.fillStyle = '#92400e';
+    ctx.fillRect(x - 2, y, 4, 8);
+    
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 8);
+    ctx.lineTo(x - 6, y + 2);
+    ctx.lineTo(x + 6, y + 2);
+    ctx.closePath();
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.moveTo(x, y - 4);
+    ctx.lineTo(x - 5, y + 4);
+    ctx.lineTo(x + 5, y + 4);
+    ctx.closePath();
+    ctx.fill();
+  };
+
   const formatNumber = (num) => {
     if (num >= 10000000) return `${(num / 10000000).toFixed(2)} Cr`;
     if (num >= 100000) return `${(num / 100000).toFixed(2)} L`;
@@ -104,8 +483,6 @@ const AfforestationEstimator = () => {
         </h1>
         <p>Calculate land area and plantation requirements to offset residual emissions through strategic afforestation.</p>
       </div>
-
-      
 
       <div className="content-grid">
         <div className="input-section">
@@ -166,7 +543,7 @@ const AfforestationEstimator = () => {
             <div className="input-group">
               <label className="input-label">Land Type</label>
               <select 
-                className="select-field"
+                className="select-field-white"
                 value={selectedLandType}
                 onChange={(e) => setSelectedLandType(e.target.value)}
               >
@@ -358,6 +735,53 @@ const AfforestationEstimator = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="result-card clustering-card-full">
+        <div className="card-title">
+          <MapPin size={20} />
+          Plantation Layout - DBSCAN Clustering
+        </div>
+        
+        <div className="mine-selector-wrapper">
+          <label className="mine-selector-label">
+            <span>Select Mine:</span>
+            <select 
+              className="mine-selector-dropdown"
+              value={selectedMine.sno}
+              onChange={(e) => {
+                const mine = emissionData.find(m => m.sno === parseInt(e.target.value));
+                setSelectedMine(mine);
+              }}
+            >
+              {emissionData.map(mine => (
+                <option key={mine.sno} value={mine.sno}>
+                  {mine.mine_name} - {mine.state} ({mine.mine_type})
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="mine-info-tags">
+            <span className="info-tag">📍 {selectedMine.district}, {selectedMine.state}</span>
+            <span className="info-tag">🏢 {selectedMine.owner}</span>
+            <span className="info-tag">⛏️ {selectedMine.mine_type}</span>
+            <span className="info-tag">🌳 Sink Area: {selectedMine.sink_area} hectares</span>
+          </div>
+        </div>
+
+        <div className="clustering-visualization">
+          <canvas 
+            ref={canvasRef} 
+            width={900} 
+            height={600}
+            className="clustering-canvas"
+          />
+        </div>
+        <div className="cluster-info-banner">
+          <strong>📊 Cluster Analysis for {selectedMine.mine_name}:</strong> Trees are grouped into clusters based on proximity (DBSCAN algorithm). 
+          Each color represents a different plantation zone around the mine site for efficient management and monitoring.
+          Total emissions: {(selectedMine.total_emission / 1000000).toFixed(2)} million kgCO2e/year
         </div>
       </div>
 
