@@ -1,0 +1,36 @@
+/* sensors.css  (or whichever file you want to keep as source of truth) */
+
+.sensor-ripple {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid;
+        box-sizing: border-box;
+        pointer-events: none;
+        opacity: 0;
+        transform: scale(1);
+        animation: ripple-pulse 1.6s ease-out forwards;
+        z-index: 1;
+}
+
+@keyframes ripple-pulse {
+        0% {
+                transform: scale(0.4);
+                opacity: 0.9;
+        }
+
+        20% {
+                opacity: 0.9;
+        }
+
+        100% {
+                transform: scale(3.2);
+                opacity: 0;
+        }
+}
+
+/* Optional: faster/more aggressive danger pulse */
+.sensor-icon.danger .sensor-ripple {
+        animation-duration: 1s;
+        border-width: 3px;
+}
