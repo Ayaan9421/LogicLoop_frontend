@@ -13,6 +13,7 @@ import {
   LabelList,
 } from "recharts";
 import "./MethanPlanning.css";
+import { DNA } from "react-loader-spinner";
 
 const MethanePlanning = () => {
   const [panels, setPanels] = useState([
@@ -71,6 +72,8 @@ const MethanePlanning = () => {
   const [loading, setLoading] = useState(false);
   const [simulationRunning, setSimulationRunning] = useState(false);
   const [currentSimulationStep, setCurrentSimulationStep] = useState(0);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const inputConfig = [
     { field: "name", label: "Name", type: "text" },
@@ -88,6 +91,58 @@ const MethanePlanning = () => {
     newPanels[index][field] = value;
     setPanels(newPanels);
   };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(
+        "https://coletta-snouted-rigoberto.ngrok-free.dev/methane/parse-panels",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+
+      if (!data.parsed || !Array.isArray(data.panels)) {
+        throw new Error("Invalid response");
+      }
+
+      // ✅ AUTO-FILL INPUTS
+      setPanels(
+        data.panels.map((p) => ({
+          name: p.name ?? "",
+          seam_depth: String(p.seam_depth ?? ""),
+          seam_thickness: String(p.seam_thickness ?? ""),
+          gas_class: String(p.gas_class ?? ""),
+          incident_rate: String(p.incident_rate ?? ""),
+          shutdowns: String(p.shutdowns ?? ""),
+          production_rate: String(p.production_rate ?? ""),
+          ventilation_capacity: String(p.ventilation_capacity ?? ""),
+        }))
+      );
+
+      setShowUploadModal(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to extract panel data. Please check CSV format.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
+
 
   const addPanel = () => {
     setPanels([
@@ -126,7 +181,7 @@ const MethanePlanning = () => {
         ventilation_capacity: parseFloat(p.ventilation_capacity),
       }));
 
-      const res = await fetch("https://coletta-snouted-rigoberto.ngrok-free.dev/optimize", {
+      const res = await fetch("https://coletta-snouted-rigoberto.ngrok-free.dev/optimize/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ panels: formattedPanels }),
@@ -147,7 +202,7 @@ const MethanePlanning = () => {
     if (!result) return;
     setSimulationRunning(true);
     setCurrentSimulationStep(0);
-    
+
     const interval = setInterval(() => {
       setCurrentSimulationStep(prev => {
         if (prev >= result.optimized.sequence.length - 1) {
@@ -250,6 +305,44 @@ const MethanePlanning = () => {
           ))}
         </div>
 
+        <div className="or-upload-divider">
+          <span>OR</span>
+        </div>
+        <button
+          className="link-btn-calc"
+          onClick={() => setShowUploadModal(true)}
+        >
+          Upload File →
+        </button>
+
+        {showUploadModal && (
+          <div className="ai-modal-overlay">
+            <div className="ai-modal">
+              <button className="ai-close" onClick={() => setShowUploadModal(false)}>✕</button>
+
+              <h2>Upload Operational Document</h2>
+              <p> CSVs supported</p>
+
+              {!uploading && (
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.csv"
+                  onChange={handleFileUpload}
+                />
+
+              )}
+
+              {uploading && (
+                <div className="ai-loader">
+                  <DNA height={90} width={90} />
+                  <p>Extracting operational data…</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+
         <button
           className={`mp-btn-optimize ${loading ? 'loading' : ''}`}
           onClick={runOptimization}
@@ -302,21 +395,21 @@ const MethanePlanning = () => {
               {/* Simulation Control */}
               <div className="mp-simulation-card">
                 <h3 className="mp-simulation-title">🚜 Panel Movement Simulation</h3>
-                <button 
+                <button
                   className={`mp-btn-simulate ${simulationRunning ? 'running' : ''}`}
                   onClick={runSimulation}
                   disabled={simulationRunning}
                 >
                   {simulationRunning ? '▶ Running...' : '▶ Start Simulation'}
                 </button>
-                
+
                 <div className="mp-simulation-view">
                   {result.optimized.sequence.map((panel, idx) => {
                     const panelScore = result.optimized.panel_scores.find(p => p.name === panel);
                     const methaneLevel = panelScore ? panelScore.final_score : 0;
-                    
+
                     return (
-                      <div 
+                      <div
                         key={idx}
                         className={`mp-sim-panel ${idx <= currentSimulationStep ? 'active' : ''} ${idx === currentSimulationStep ? 'current' : ''}`}
                       >
@@ -331,9 +424,9 @@ const MethanePlanning = () => {
                         </div>
                         <div className="mp-sim-panel-right">
                           <div className="mp-sim-methane-bar">
-                            <div 
+                            <div
                               className="mp-sim-methane-fill"
-                              style={{ 
+                              style={{
                                 width: `${(methaneLevel / Math.max(...result.optimized.panel_scores.map(p => p.final_score))) * 100}%`
                               }}
                             />
