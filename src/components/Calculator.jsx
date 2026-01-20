@@ -3,15 +3,15 @@ import { Calculator as CalcIcon, Zap, Activity, TrendingUp, Truck, Drill, Users,
 import './Calculator.css';
 
 const Calculator = () => {
-  // Form inputs
-  const [excavation, setExcavation] = useState('');
-  const [transportation, setTransportation] = useState('');
-  const [fuel, setFuel] = useState('');
-  const [equipment, setEquipment] = useState('');
-  const [workers, setWorkers] = useState('');
-  const [output, setOutput] = useState('');
+  // Form inputs with dummy data
+  const [excavation, setExcavation] = useState('5000');
+  const [transportation, setTransportation] = useState('250');
+  const [fuel, setFuel] = useState('1200');
+  const [equipment, setEquipment] = useState('180');
+  const [workers, setWorkers] = useState('25');
+  const [output, setOutput] = useState('8000');
   const [fuelType, setFuelType] = useState('coal');
-  const [reduction, setReduction] = useState('');
+  const [reduction, setReduction] = useState('500');
   
   // Results
   const [results, setResults] = useState(null);
