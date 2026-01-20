@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Calculator as CalcIcon, Zap, Activity, TrendingUp, Truck, Drill, Users, Package, Leaf, DollarSign } from 'lucide-react';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import './Calculator.css';
 
 const Calculator = () => {
@@ -93,6 +95,48 @@ const Calculator = () => {
       
       setIsCalculating(false);
     }, 800);
+  };
+  const downloadPDF = () => {
+    if (!results) {
+      alert("Please calculate emissions before generating the report.");
+      return;
+    }
+
+    const input = document.getElementById("pdf-report");
+
+    // Temporarily show it for capture
+    input.style.display = "block";
+
+    html2canvas(input, { scale: 2 }).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const dateStr = new Date().toISOString().split("T")[0];
+
+      pdf.save(`Mining-Emission-Report-${dateStr}.pdf`);
+
+      // Hide again after capture
+      input.style.display = "none";
+    });
   };
 
   const resetForm = () => {
@@ -227,7 +271,7 @@ const Calculator = () => {
           </div>
         </div>
 
-        <div className="results-column">
+        <div className="results-column" >
           <div className="result-card-primary show">
             <div className="result-icon">
               <Activity size={32} />
@@ -348,7 +392,7 @@ const Calculator = () => {
         <div className="info-card">
           <h2>Export Report</h2>
           <p>Download comprehensive calculation results for compliance and auditing</p>
-          <button className="link-btn-calc">Generate PDF →</button>
+          <button className="link-btn-calc" onClick={downloadPDF}>Generate PDF →</button>
         </div>
         <div className="info-card">
           <h2>Historical Data</h2>
@@ -360,6 +404,67 @@ const Calculator = () => {
           <p>Get AI-powered suggestions to reduce your carbon footprint</p>
           <button className="link-btn-calc">Get Insights →</button>
         </div>
+      </div>
+      {/* Hidden PDF Report Layout */}
+      <div id="pdf-report" style={{ padding: "30px", width: "800px", background: "white", color: "black" }}>
+
+        <h1 style={{ textAlign: "center" }}>Mining Emission Assessment Report</h1>
+        <div style={{ height: "20px"}}></div>
+        <p style={{ textAlign: "center", marginBottom: "20px" }}>
+          Generated on: {new Date().toLocaleString()}
+        </p>
+
+        <hr />
+
+        {/* Input Summary */}
+        <h2>Operational Input Summary</h2>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
+          <tbody>
+            <tr><td>Excavation Activity</td><td>{excavation || 0} tonnes</td></tr>
+            <tr><td>Transportation Distance</td><td>{transportation || 0} km</td></tr>
+            <tr><td>Fuel Consumption</td><td>{fuel || 0} liters</td></tr>
+            <tr><td>Fuel Type</td><td>{fuelType}</td></tr>
+            <tr><td>Equipment Hours</td><td>{equipment || 0} hours</td></tr>
+            <tr><td>Number of Workers</td><td>{workers || 0}</td></tr>
+            <tr><td>Annual Output</td><td>{output || 0} tonnes</td></tr>
+            <tr><td>Emission Reduction</td><td>{reduction || 0} kgCO2e</td></tr>
+          </tbody>
+        </table>
+
+        <hr />
+
+        {/* Results Section */}
+        <h2>Emission Calculation Results</h2>
+
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <tbody>
+            <tr><td>Total Operational Emissions</td><td>{results?.totalEmissions || 0} kgCO2e</td></tr>
+            <tr><td>Excavation Emissions</td><td>{results?.excavationEmissions || 0} kgCO2e</td></tr>
+            <tr><td>Transportation Emissions</td><td>{results?.transportationEmissions || 0} kgCO2e</td></tr>
+            <tr><td>Equipment Emissions</td><td>{results?.equipmentEmissions || 0} kgCO2e</td></tr>
+            <tr><td>Per Worker Emissions</td><td>{results?.perCapitaEmissions || 0} kgCO2e</td></tr>
+            <tr><td>Per Output Emissions</td><td>{results?.perOutputEmissions || 0} kgCO2e</td></tr>
+          </tbody>
+        </table>
+
+        <hr />
+
+        {/* Carbon Credits Section */}
+        <h2>Carbon Credit Summary</h2>
+
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <tbody>
+            <tr><td>Baseline Emissions</td><td>{results?.baseline || 0} kgCO2e</td></tr>
+            <tr><td>Reduction Achieved</td><td>{results?.reduced || 0} kgCO2e</td></tr>
+            <tr><td>Carbon Credits Earned</td><td>{results?.carbonCredits || 0}</td></tr>
+            <tr><td>Estimated Worth</td><td>₹{results?.worth || 0}</td></tr>
+          </tbody>
+        </table>
+
+        <p style={{ marginTop: "30px", fontSize: "12px", textAlign: "center" }}>
+          This report is system-generated for carbon auditing and compliance purposes.
+        </p>
+
       </div>
     </div>
   );
