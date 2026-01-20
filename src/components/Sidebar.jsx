@@ -47,7 +47,7 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
           </div>
           {!isCollapsed && (
             <div className="logo-text">
-              <div className="logo-title">CarbonTrack</div>
+              <div className="logo-title">ReduCH3</div>
               <div className="logo-subtitle">Safety Admin</div>
             </div>
           )}
