@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calculator as CalcIcon, Zap, Activity, TrendingUp, Truck, Drill, Users, Package, Leaf, DollarSign } from 'lucide-react';
 import './Calculator.css';
+import { DNA } from "react-loader-spinner";
 
 const Calculator = () => {
   // Form inputs with dummy data
@@ -12,7 +13,11 @@ const Calculator = () => {
   const [output, setOutput] = useState('8000');
   const [fuelType, setFuelType] = useState('coal');
   const [reduction, setReduction] = useState('500');
-  
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiData, setAiData] = useState(null);
+  const [aiError, setAiError] = useState(null);
+
   // Results
   const [results, setResults] = useState(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -23,7 +28,7 @@ const Calculator = () => {
   const EQUIPMENT_FACTOR = 0.08;
   const COAL_CO2_EMISSION_FACTOR = 2.42;
   const COST_PER_CC = 15;
-  
+
   const emissionFactors = {
     coal: 2.42,
     diesel: 2.68,
@@ -33,7 +38,7 @@ const Calculator = () => {
 
   const calculateEmissions = () => {
     setIsCalculating(true);
-    
+
     setTimeout(() => {
       const excavationVal = parseFloat(excavation || 0);
       const transportationVal = parseFloat(transportation || 0);
@@ -53,7 +58,7 @@ const Calculator = () => {
       const excavationPerCapita = excavationEmissions / workersVal;
       const transportationPerCapita = transportationEmissions / workersVal;
       const equipmentPerCapita = equipmentEmissions / workersVal;
-      
+
       const excavationPerOutput = excavationEmissions / outputVal;
       const transportationPerOutput = transportationEmissions / outputVal;
       const equipmentPerOutput = equipmentEmissions / outputVal;
@@ -90,7 +95,7 @@ const Calculator = () => {
         transportationPercent: ((transportationEmissions / totalEmissions) * 100).toFixed(1),
         equipmentPercent: ((equipmentEmissions / totalEmissions) * 100).toFixed(1)
       });
-      
+
       setIsCalculating(false);
     }, 800);
   };
@@ -106,6 +111,46 @@ const Calculator = () => {
     setReduction('');
     setResults(null);
   };
+
+  const fetchAIInsights = async () => {
+    if (!results) return;
+
+    setShowAIModal(true);
+    setAiLoading(true);
+    setAiError(null);
+    setAiData(null);
+
+    try {
+      const response = await fetch("https://coletta-snouted-rigoberto.ngrok-free.dev/ai/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          excavation_emissions: Number(results.excavationEmissions),
+          transportation_emissions: Number(results.transportationEmissions),
+          equipment_emissions: Number(results.equipmentEmissions),
+          workers: Number(workers),
+          output_tonnes: Number(output),
+          fuel_type: fuelType,
+          total_emissions: Number(results.totalEmissions)
+        })
+      });
+
+      if (!response.ok) throw new Error("AI request failed");
+
+      const data = await response.json();
+      console.log(data);
+      if (data == null) {
+        fetchAIInsights();
+      }
+      setAiData(data);
+    } catch (err) {
+      console.log(err);
+      setAiError("AI insights are currently unavailable.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
 
   return (
     <div className="calculator-page">
@@ -157,9 +202,9 @@ const Calculator = () => {
 
           <div className="input-group">
             <label>Fuel Type</label>
-            <select 
+            <select
               className="select-input"
-              value={fuelType} 
+              value={fuelType}
               onChange={(e) => setFuelType(e.target.value)}
             >
               <option value="coal">Coal (2.42 kgCO2e/L)</option>
@@ -214,7 +259,7 @@ const Calculator = () => {
           </div>
 
           <div className="button-group">
-            <button 
+            <button
               className={`btn-calculate ${isCalculating ? 'calculating' : ''}`}
               onClick={calculateEmissions}
               disabled={isCalculating}
@@ -244,7 +289,7 @@ const Calculator = () => {
 
           <div className="breakdown-card fade-in">
             <h3>Operational Breakdown</h3>
-            
+
             <div className="breakdown-item">
               <div className="breakdown-header">
                 <span className="breakdown-label">
@@ -254,8 +299,8 @@ const Calculator = () => {
                 <span className="breakdown-value">{results?.excavationEmissions || '0.00'} kg</span>
               </div>
               <div className="progress-bar-container">
-                <div 
-                  className="progress-bar-fill fuel" 
+                <div
+                  className="progress-bar-fill fuel"
                   style={{ width: `${results?.excavationPercent || 0}%` }}
                 ></div>
               </div>
@@ -271,8 +316,8 @@ const Calculator = () => {
                 <span className="breakdown-value">{results?.transportationEmissions || '0.00'} kg</span>
               </div>
               <div className="progress-bar-container">
-                <div 
-                  className="progress-bar-fill electricity" 
+                <div
+                  className="progress-bar-fill electricity"
                   style={{ width: `${results?.transportationPercent || 0}%` }}
                 ></div>
               </div>
@@ -288,8 +333,8 @@ const Calculator = () => {
                 <span className="breakdown-value">{results?.equipmentEmissions || '0.00'} kg</span>
               </div>
               <div className="progress-bar-container">
-                <div 
-                  className="progress-bar-fill blasting" 
+                <div
+                  className="progress-bar-fill blasting"
                   style={{ width: `${results?.equipmentPercent || 0}%` }}
                 ></div>
               </div>
@@ -358,9 +403,73 @@ const Calculator = () => {
         <div className="info-card">
           <h2>Recommendations</h2>
           <p>Get AI-powered suggestions to reduce your carbon footprint</p>
-          <button className="link-btn-calc">Get Insights →</button>
+          <button className="link-btn-calc" onClick={fetchAIInsights}>Get Insights →</button>
         </div>
       </div>
+      {showAIModal && (
+        <div className="ai-modal-overlay">
+          <div className="ai-modal">
+            <button className="ai-close" onClick={() => setShowAIModal(false)}>
+              ✕
+            </button>
+
+            {aiLoading && (
+              <div className="ai-loader">
+                <DNA
+                  visible={true}
+                  height={100}
+                  width={100}
+                  ariaLabel="dna-loading"
+                  wrapperClass="dna-wrapper"
+                  dnaColorOne="rgba(16, 185, 129, 0.65)"   // emerald green
+                  dnaColorTwo="#059669"                  // darker green
+                />
+                <h2>Analyzing Mining Emissions</h2>
+                <p>AI is generating sustainability insights…</p>
+              </div>
+            )}
+
+            {!aiLoading && aiError && (
+              <div className="ai-error">{aiError}</div>
+            )}
+
+            {!aiLoading && aiData && (
+              <div className="ai-content">
+                <h2>AI Recommendations</h2>
+
+                <p className="ai-summary">{aiData.summary}</p>
+
+                <h4>🔥 High Impact Actions</h4>
+                <ul>
+                  {aiData.high_impact_actions.map((a, i) => (
+                    <li key={i}>{a}</li>
+                  ))}
+                </ul>
+
+                <h4>⚙️ Medium Impact Actions</h4>
+                <ul>
+                  {aiData.medium_impact_actions.map((a, i) => (
+                    <li key={i}>{a}</li>
+                  ))}
+                </ul>
+
+                <h4>⚡ Quick Wins</h4>
+                <ul>
+                  {aiData.quick_wins.map((a, i) => (
+                    <li key={i}>{a}</li>
+                  ))}
+                </ul>
+
+                <div className="ai-impact">
+                  Estimated Reduction Potential:
+                  <strong> {aiData.estimated_reduction_percent}%</strong>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
