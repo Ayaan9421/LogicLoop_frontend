@@ -92,17 +92,17 @@ const RiskManagement = () => {
   return (
     <div style={{ fontFamily: "Arial, sans-serif", height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Risk Dashboard */}
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        gap: "20px", 
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        gap: "20px",
         margin: "20px",
         flexWrap: "wrap"
       }}>
-        <div style={{ 
-          padding: "15px 30px", 
-          background: "#006400", 
-          color: "#fff", 
+        <div style={{
+          padding: "15px 30px",
+          background: "#006400",
+          color: "#fff",
           borderRadius: "8px",
           minWidth: "120px",
           textAlign: "center",
@@ -111,10 +111,10 @@ const RiskManagement = () => {
           <div style={{ fontSize: "32px", fontWeight: "bold" }}>{riskCounts.Low}</div>
           <div style={{ fontSize: "12px", marginTop: "5px", opacity: 0.9 }}>Low Risk</div>
         </div>
-        <div style={{ 
-          padding: "15px 30px", 
-          background: "#ADFF2F", 
-          color: "#000", 
+        <div style={{
+          padding: "15px 30px",
+          background: "#ADFF2F",
+          color: "#000",
           borderRadius: "8px",
           minWidth: "120px",
           textAlign: "center",
@@ -123,10 +123,10 @@ const RiskManagement = () => {
           <div style={{ fontSize: "32px", fontWeight: "bold" }}>{riskCounts.Medium}</div>
           <div style={{ fontSize: "12px", marginTop: "5px" }}>Medium Risk</div>
         </div>
-        <div style={{ 
-          padding: "15px 30px", 
-          background: "#FFD700", 
-          color: "#000", 
+        <div style={{
+          padding: "15px 30px",
+          background: "#FFD700",
+          color: "#000",
           borderRadius: "8px",
           minWidth: "120px",
           textAlign: "center",
@@ -140,10 +140,10 @@ const RiskManagement = () => {
       {/* Map Container */}
       <div style={{ position: "relative", flex: 1, margin: "0 20px 20px" }}>
         {/* Legend */}
-        <div style={{ 
-          position: "absolute", 
-          top: "20px", 
-          right: "20px", 
+        <div style={{
+          position: "absolute",
+          top: "20px",
+          right: "20px",
           zIndex: 1000,
           background: "#000",
           color: "#fff",
