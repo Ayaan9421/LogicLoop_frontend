@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Calculator, 
-  Wind, 
-  Layers, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Calculator,
+  Wind,
+  Layers,
+  FileText,
   Settings,
   AlertTriangle,
   Trees,
@@ -26,7 +26,8 @@ const Sidebar = ({ isCollapsed, activePage, setActivePage, toggleSidebar }) => {
     { icon: Layers, label: 'Scenarios', id: 'scenarios' },
     { icon: TrendingDown, label: 'Gap Analysis', id: 'gap-analysis' },
     { icon: Sprout, label: 'Afforestation', id: 'afforestation' },
-    { icon: Database, label: 'Carbon Sink', id: 'carbon-sink' }
+    { icon: Database, label: 'Carbon Sink', id: 'carbon-sink' },
+    { icon: Map, label: 'Mine Map', id: 'mine-map' }
   ];
 
   const systemMenuItems = [

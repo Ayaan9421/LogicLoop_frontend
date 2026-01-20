@@ -1,0 +1,26 @@
+.map-canvas {
+        flex: 1;
+        padding: 20px;
+}
+
+/* Center image but DO NOT stretch */
+.map-image-container {
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+}
+
+/* 🔥 THIS is the true canvas */
+.map-image-wrapper {
+        position: relative;
+        display: inline-block;
+        /* CRITICAL */
+}
+
+/* Image controls wrapper size */
+.mine-map {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        user-select: none;
+}
