@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  Plus, 
-  Filter, 
-  ChevronDown, 
-  FileText, 
-  Eye, 
-  Download, 
-  Printer, 
-  MoreVertical, 
-  TrendingDown 
+import {
+  Plus,
+  Filter,
+  ChevronDown,
+  FileText,
+  Eye,
+  Download,
+  Printer,
+  MoreVertical,
+  TrendingDown
 } from 'lucide-react';
 import './Report.css';
 
@@ -152,8 +152,8 @@ const Reports = () => {
               {['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'].map((month, i) => (
                 <div key={i} className="month-bar">
                   <div className="bar-container">
-                    <div 
-                      className="emission-bar" 
+                    <div
+                      className="emission-bar"
                       style={{ height: `${70 + Math.random() * 30}%` }}
                     ></div>
                   </div>
@@ -186,13 +186,13 @@ const Reports = () => {
           </div>
           <div className="donut-chart">
             <svg viewBox="0 0 200 200" className="donut-svg">
-              <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" strokeWidth="30"/>
-              <circle 
-                cx="100" 
-                cy="100" 
-                r="80" 
-                fill="none" 
-                stroke="#10b981" 
+              <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" strokeWidth="30" />
+              <circle
+                cx="100"
+                cy="100"
+                r="80"
+                fill="none"
+                stroke="#10b981"
                 strokeWidth="30"
                 strokeDasharray="440 503"
                 strokeDashoffset="0"
