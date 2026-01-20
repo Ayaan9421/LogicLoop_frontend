@@ -611,6 +611,7 @@
   position: relative;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
   animation: scaleIn 0.4s ease;
+  color: black;
 }
 
 @keyframes scaleIn {
@@ -706,4 +707,42 @@
   border-radius: 12px;
   font-weight: 600;
   color: #065f46;
+}
+
+/* Base modal overlay */
+.ai-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Modal card */
+.ai-modal {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px;
+  width: 90%;
+  max-width: 720px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* 🔹 HISTORY MODAL (LEVEL 1) */
+.history-modal {
+  z-index: 1100;
+}
+
+/* 🔹 HISTORY DETAIL MODAL (LEVEL 2) */
+.history-detail-modal {
+  z-index: 1200;
+}
+
+/* 🔹 AI MODAL (ALWAYS ON TOP) */
+.ai-top-modal {
+  z-index: 1300;
 }

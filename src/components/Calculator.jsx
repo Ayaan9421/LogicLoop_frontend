@@ -19,6 +19,18 @@ const Calculator = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiData, setAiData] = useState(null);
   const [aiError, setAiError] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  // 🔹 CHANGE: Level-2 history detail modal
+  const [selectedHistory, setSelectedHistory] = useState(null);
+
+  // 🔹 CHANGE: AI insights for COMPLETE history
+  const [historyAIData, setHistoryAIData] = useState(null);
+  const [historyAILoading, setHistoryAILoading] = useState(false);
+  const [historyAIError, setHistoryAIError] = useState(null);
+
+
 
   // Results
   const [results, setResults] = useState(null);
@@ -98,9 +110,29 @@ const Calculator = () => {
         equipmentPercent: ((equipmentEmissions / totalEmissions) * 100).toFixed(1)
       });
 
+      const historyEntry = {
+        timestamp: new Date().toISOString(),
+
+        excavation_emissions: excavationEmissions,
+        transportation_emissions: transportationEmissions,
+        equipment_emissions: equipmentEmissions,
+
+        workers: workersVal,
+        output_tonnes: outputVal,
+        fuel_type: fuelType,
+        total_emissions: totalEmissions
+      };
+
+      const existingHistory =
+        JSON.parse(localStorage.getItem("emissionHistory")) || [];
+
+      existingHistory.push(historyEntry);
+      localStorage.setItem("emissionHistory", JSON.stringify(existingHistory));
+
       setIsCalculating(false);
     }, 800);
   };
+  
   const downloadPDF = () => {
     if (!results) {
       alert("Please calculate emissions before generating the report.");
@@ -192,6 +224,47 @@ const Calculator = () => {
       setAiError("AI insights are currently unavailable.");
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  // 🔹 CHANGE: Open Historical Analytics
+  const openHistory = () => {
+    const data =
+      JSON.parse(localStorage.getItem("emissionHistory")) || [];
+    setHistory(data.reverse()); // latest first
+    setShowHistoryModal(true);
+  };
+
+  // 🔹 CHANGE: Fetch AI insights for COMPLETE history
+  const fetchCompleteHistoryAI = async () => {
+    if (history.length === 0) return;
+
+    setShowAIModal(true);
+    setHistoryAILoading(true);
+    setHistoryAIError(null);
+    setHistoryAIData(null);
+    setAiData(null);
+    setAiError(null);
+
+    try {
+      const response = await fetch(
+        "https://coletta-snouted-rigoberto.ngrok-free.dev/ai/recommendations/history",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ history })
+        }
+      );
+
+      if (!response.ok) throw new Error("AI history request failed");
+
+      const data = await response.json();
+      console.log(data);
+      setHistoryAIData(data);
+    } catch (err) {
+      setHistoryAIError("AI analysis failed for historical data.");
+    } finally {
+      setHistoryAILoading(false);
     }
   };
 
@@ -442,7 +515,7 @@ const Calculator = () => {
         <div className="info-card">
           <h2>Historical Data</h2>
           <p>View trends and compare emissions across different time periods</p>
-          <button className="link-btn-calc">View Analytics →</button>
+          <button className="link-btn-calc" onClick={openHistory}>View Analytics →</button>
         </div>
         <div className="info-card">
           <h2>Recommendations</h2>
@@ -451,13 +524,15 @@ const Calculator = () => {
         </div>
       </div>
       {showAIModal && (
-        <div className="ai-modal-overlay">
+        <div className="ai-modal-overlay ai-top-modal">
+
           <div className="ai-modal">
             <button className="ai-close" onClick={() => setShowAIModal(false)}>
               ✕
             </button>
 
-            {aiLoading && (
+            {/* 🔹 AI LOADING (single OR history) */}
+            {(aiLoading || historyAILoading) && (
               <div className="ai-loader">
                 <DNA
                   visible={true}
@@ -465,18 +540,33 @@ const Calculator = () => {
                   width={100}
                   ariaLabel="dna-loading"
                   wrapperClass="dna-wrapper"
-                  dnaColorOne="rgba(16, 185, 129, 0.65)"   // emerald green
-                  dnaColorTwo="#059669"                  // darker green
+                  dnaColorOne="rgba(16, 185, 129, 0.65)"
+                  dnaColorTwo="#059669"
                 />
-                <h2>Analyzing Mining Emissions</h2>
-                <p>AI is generating sustainability insights…</p>
+                <h2>
+                  {historyAILoading
+                    ? "Analyzing Historical Emissions"
+                    : "Analyzing Mining Emissions"}
+                </h2>
+                <p>
+                  {historyAILoading
+                    ? "AI is reviewing trends across all records…"
+                    : "AI is generating sustainability insights…"}
+                </p>
               </div>
             )}
 
+            {/* 🔹 SINGLE CALCULATION AI ERROR */}
             {!aiLoading && aiError && (
               <div className="ai-error">{aiError}</div>
             )}
 
+            {/* 🔹 HISTORY AI ERROR */}
+            {!historyAILoading && historyAIError && (
+              <div className="ai-error">{historyAIError}</div>
+            )}
+
+            {/* 🔹 SINGLE CALCULATION AI */}
             {!aiLoading && aiData && (
               <div className="ai-content">
                 <h2>AI Recommendations</h2>
@@ -510,15 +600,128 @@ const Calculator = () => {
                 </div>
               </div>
             )}
+
+            {/* 🔹 COMPLETE HISTORY AI */}
+            {!historyAILoading && historyAIData && (
+              <div className="ai-content">
+                <h2>AI Analysis — Complete History</h2>
+
+                <p className="ai-summary">{historyAIData.summary}</p>
+
+                <h4>📊 Key Patterns</h4>
+                <ul>
+                  {historyAIData.patterns.map((p, i) => (
+                    <li key={i}>{p}</li>
+                  ))}
+                </ul>
+
+                <h4>🚀 Strategic Recommendations</h4>
+                <ul>
+                  {historyAIData.recommendations.map((r, i) => (
+                    <li key={i}>{r}</li>
+                  ))}
+                </ul>
+
+                <div className="ai-impact">
+                  Estimated Overall Reduction Potential:
+                  <strong> {historyAIData.estimated_overall_reduction_percent}%</strong>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       )}
+
+      {/* 🔹 LEVEL 1: History Overview Modal */}
+      {showHistoryModal && (
+        <div className="ai-modal-overlay history-modal">
+
+          <div className="ai-modal">
+            <button
+              className="ai-close"
+              onClick={() => setShowHistoryModal(false)}
+            >
+              ✕
+            </button>
+
+            <h2>Historical Emission Records</h2>
+
+            {history.length === 0 && <p>No historical data available.</p>}
+
+            {history.map((h, idx) => (
+              <div
+                key={idx}
+                style={{
+                  background: "#f8fafc",
+                  padding: "14px",
+                  borderRadius: "10px",
+                  marginBottom: "10px",
+                  cursor: "pointer",
+                  borderLeft: "4px solid #10b981"
+                }}
+                onClick={() => setSelectedHistory(h)} // 🔹 CHANGE: open Level 2
+              >
+                <strong>{new Date(h.timestamp).toLocaleString()}</strong>
+                <p>Total: <b>{h.total_emissions.toFixed(2)} kgCO2e</b></p>
+                <p>Fuel: {h.fuel_type} | Output: {h.output_tonnes} t</p>
+              </div>
+            ))}
+
+            {/* 🔹 CHANGE: AI insights for ENTIRE history */}
+            <div style={{ textAlign: "right", marginTop: "20px" }}>
+              <button
+                className="link-btn-calc"
+                onClick={fetchCompleteHistoryAI}
+              >
+                Get AI Insights →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔹 LEVEL 2: Detailed History View */}
+      {selectedHistory && (
+        <div className="ai-modal-overlay history-detail-modal">
+
+          <div className="ai-modal">
+            <button
+              className="ai-close"
+              onClick={() => setSelectedHistory(null)}
+            >
+              ✕
+            </button>
+
+            <h2>Emission Calculation Details</h2>
+
+            <p><b>Date:</b> {new Date(selectedHistory.timestamp).toLocaleString()}</p>
+            <p><b>Fuel Type:</b> {selectedHistory.fuel_type}</p>
+            <p><b>Workers:</b> {selectedHistory.workers}</p>
+            <p><b>Annual Output:</b> {selectedHistory.output_tonnes} tonnes</p>
+
+            <hr />
+
+            <p>Excavation: {selectedHistory.excavation_emissions.toFixed(2)} kgCO2e</p>
+            <p>Transportation: {selectedHistory.transportation_emissions.toFixed(2)} kgCO2e</p>
+            <p>Equipment: {selectedHistory.equipment_emissions.toFixed(2)} kgCO2e</p>
+
+            <hr />
+
+            <p>
+              <b>Total Emissions:</b>{" "}
+              {selectedHistory.total_emissions.toFixed(2)} kgCO2e
+            </p>
+          </div>
+        </div>
+      )}
+
 
       {/* Hidden PDF Report Layout */}
       <div id="pdf-report" style={{ padding: "30px", width: "800px", background: "white", color: "black" }}>
 
         <h1 style={{ textAlign: "center" }}>Mining Emission Assessment Report</h1>
-        <div style={{ height: "20px"}}></div>
+        <div style={{ height: "20px" }}></div>
         <p style={{ textAlign: "center", marginBottom: "20px" }}>
           Generated on: {new Date().toLocaleString()}
         </p>
