@@ -85,7 +85,7 @@ const MethanePlanning = () => {
         ventilation_capacity: parseFloat(p.ventilation_capacity),
       }));
 
-      const res = await fetch("http://localhost:5000/optimize", {
+      const res = await fetch("http://localhost:8000/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ panels: formattedPanels }),
@@ -123,20 +123,20 @@ const MethanePlanning = () => {
 
   const comparisonChartData = () => {
     if (!result) return [];
-    
+
     const baselineMap = new Map(
       result.baseline.panel_scores.map(p => [p.name, p.final_score])
     );
-    
+
     const optimizedMap = new Map(
       result.optimized.panel_scores.map(p => [p.name, p.final_score])
     );
-    
+
     const allPanels = [...new Set([
       ...result.baseline.panel_scores.map(p => p.name),
       ...result.optimized.panel_scores.map(p => p.name)
     ])];
-    
+
     return allPanels.map(name => ({
       name,
       baseline: baselineMap.get(name) || 0,
@@ -164,15 +164,15 @@ const MethanePlanning = () => {
               <div className="mp-panel-header">
                 <h3>Panel {index + 1}</h3>
                 {panels.length > 1 && (
-                  <button 
-                    className="mp-btn-remove" 
+                  <button
+                    className="mp-btn-remove"
                     onClick={() => removePanel(index)}
                   >
                     Remove
                   </button>
                 )}
               </div>
-              
+
               <div className="mp-input-grid">
                 {inputConfig.map((config) => (
                   <div key={config.field} className="mp-input-field">
@@ -192,9 +192,9 @@ const MethanePlanning = () => {
           ))}
         </div>
 
-        <button 
+        <button
           className={`mp-btn-optimize ${loading ? 'loading' : ''}`}
-          onClick={runOptimization} 
+          onClick={runOptimization}
           disabled={loading}
         >
           {loading ? "Running Optimization..." : "Run Optimization"}
@@ -222,22 +222,22 @@ const MethanePlanning = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="sequence" stroke="#64748b" style={{ fontSize: '13px' }} />
                 <YAxis stroke="#64748b" style={{ fontSize: '13px' }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    background: '#fff', 
+                <Tooltip
+                  contentStyle={{
+                    background: '#fff',
                     border: '1px solid #e2e8f0',
                     borderRadius: '8px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
-                  formatter={(value) => [value.toFixed(3), "Total Methane"]} 
+                  formatter={(value) => [value.toFixed(3), "Total Methane"]}
                 />
                 <Legend wrapperStyle={{ fontSize: '13px' }} />
                 <Bar dataKey="total_methane" fill="#3b82f6" radius={[8, 8, 0, 0]}>
-                  <LabelList 
-                    dataKey="total_methane" 
-                    position="top" 
-                    formatter={(val) => val.toFixed(3)} 
-                    style={{ fontSize: '12px', fontWeight: '600' }} 
+                  <LabelList
+                    dataKey="total_methane"
+                    position="top"
+                    formatter={(val) => val.toFixed(3)}
+                    style={{ fontSize: '12px', fontWeight: '600' }}
                   />
                 </Bar>
               </BarChart>
@@ -258,7 +258,7 @@ const MethanePlanning = () => {
                 ))}
               </div>
             </div>
-            
+
             <div className="mp-sequence-card optimized">
               <h4>Optimized Sequence</h4>
               <div className="mp-sequence-flow">
@@ -275,49 +275,26 @@ const MethanePlanning = () => {
           </div>
 
           <div className="mp-chart-section">
-            <h3 className="mp-chart-title">Panel Methane Contribution: Baseline vs Optimized</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={comparisonChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '13px' }} />
-                <YAxis stroke="#64748b" style={{ fontSize: '13px' }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    background: '#fff', 
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                  }}
-                  formatter={(value) => [value.toFixed(3), "Methane"]} 
-                />
-                <Legend wrapperStyle={{ fontSize: '13px' }} />
-                <Bar dataKey="baseline" fill="#ef4444" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="optimized" fill="#10b981" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="mp-chart-section">
             <h3 className="mp-chart-title">Methane Contribution by Panel Order (Optimized)</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={panelLineChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '13px' }} />
                 <YAxis stroke="#64748b" style={{ fontSize: '13px' }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    background: '#fff', 
+                <Tooltip
+                  contentStyle={{
+                    background: '#fff',
                     border: '1px solid #e2e8f0',
                     borderRadius: '8px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
-                  formatter={(value) => [value.toFixed(3), "Methane"]} 
+                  formatter={(value) => [value.toFixed(3), "Methane"]}
                 />
                 <Legend wrapperStyle={{ fontSize: '13px' }} />
-                <Line 
-                  type="monotone" 
-                  dataKey="methane" 
-                  stroke="#8b5cf6" 
+                <Line
+                  type="monotone"
+                  dataKey="methane"
+                  stroke="#8b5cf6"
                   strokeWidth={3}
                   dot={{ fill: '#8b5cf6', r: 5 }}
                   activeDot={{ r: 7 }}
