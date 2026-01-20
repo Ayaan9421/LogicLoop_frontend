@@ -51,7 +51,7 @@ const Reports = () => {
           <div className="breadcrumb-small">
             <span>Home</span>
             <span>/</span>
-            <span>Reports & Compliance</span>
+            <span>Reports & Complianc</span>
           </div>
           <h1>Reports & Compliance Progress</h1>
           <p>Manage audits, track Jharia Coalfield sustainability goals, and export regulatory compliance documentation.</p>
