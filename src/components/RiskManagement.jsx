@@ -92,91 +92,54 @@ const RiskManagement = () => {
   return (
     <div style={{ fontFamily: "Arial, sans-serif", height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Risk Dashboard */}
-      <div style={{
-        display: "flex",
-        justifyContent: "center",
-        gap: "20px",
-        margin: "20px",
-        flexWrap: "wrap"
-      }}>
-        <div style={{
-          padding: "15px 30px",
-          background: "#006400",
-          color: "#fff",
-          borderRadius: "8px",
-          minWidth: "120px",
-          textAlign: "center",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-        }}>
-          <div style={{ fontSize: "32px", fontWeight: "bold" }}>{riskCounts.Low}</div>
-          <div style={{ fontSize: "12px", marginTop: "5px", opacity: 0.9 }}>Low Risk</div>
+      {/* Risk Gradient Bar */}
+      <div
+        style={{
+          margin: "20px",
+          padding: "14px 20px",
+          background: "#242424",
+          borderRadius: "10px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.25)"
+        }}
+      >
+        <div
+          style={{
+            height: "18px",
+            borderRadius: "10px",
+            background: "linear-gradient(to right, #006400, #ADFF2F, #FFD700, #ef4444)"
+          }}
+        />
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: "8px",
+            fontSize: "12px",
+            color: "#e5e7eb",
+            fontWeight: "600"
+          }}
+        >
+          <span>LOW RISK</span>
+          <span>HIGH RISK</span>
         </div>
-        <div style={{
-          padding: "15px 30px",
-          background: "#ADFF2F",
-          color: "#000",
-          borderRadius: "8px",
-          minWidth: "120px",
-          textAlign: "center",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-        }}>
-          <div style={{ fontSize: "32px", fontWeight: "bold" }}>{riskCounts.Medium}</div>
-          <div style={{ fontSize: "12px", marginTop: "5px" }}>Medium Risk</div>
-        </div>
-        <div style={{
-          padding: "15px 30px",
-          background: "#FFD700",
-          color: "#000",
-          borderRadius: "8px",
-          minWidth: "120px",
-          textAlign: "center",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-        }}>
-          <div style={{ fontSize: "32px", fontWeight: "bold" }}>{riskCounts.High}</div>
-          <div style={{ fontSize: "12px", marginTop: "5px" }}>High Risk</div>
+
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "6px",
+            fontSize: "11px",
+            color: "#9ca3af"
+          }}
+        >
+          Risk Intensity Scale
         </div>
       </div>
+
 
       {/* Map Container */}
       <div style={{ position: "relative", flex: 1, margin: "0 20px 20px" }}>
         {/* Legend */}
-        <div style={{
-          position: "absolute",
-          top: "20px",
-          right: "20px",
-          zIndex: 1000,
-          background: "#000",
-          color: "#fff",
-          padding: "15px",
-          borderRadius: "8px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-          maxWidth: "200px"
-        }}>
-          <h4 style={{ margin: "0 0 10px 0", fontSize: "14px" }}>Risk Levels</h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ width: "20px", height: "20px", background: "#006400", borderRadius: "3px" }}></div>
-              <span style={{ fontSize: "12px" }}>Low (&lt;5%)</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ width: "20px", height: "20px", background: "#ADFF2F", borderRadius: "3px" }}></div>
-              <span style={{ fontSize: "12px" }}>Medium (5-10%)</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ width: "20px", height: "20px", background: "#FFD700", borderRadius: "3px" }}></div>
-              <span style={{ fontSize: "12px" }}>High (&gt;10%)</span>
-            </div>
-          </div>
-          <div style={{ marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #444" }}>
-            <h4 style={{ margin: "0 0 8px 0", fontSize: "12px" }}>Risk Factors</h4>
-            <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "11px", lineHeight: "1.6" }}>
-              <li>Slope angle</li>
-              <li>Rainfall</li>
-              <li>Humidity</li>
-              <li>Intensity score</li>
-            </ul>
-          </div>
-        </div>
 
         <div id="map" style={{ height: "100%", width: "100%", borderRadius: "8px", overflow: "hidden" }} />
       </div>
