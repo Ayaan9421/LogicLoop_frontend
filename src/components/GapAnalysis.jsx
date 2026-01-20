@@ -1,29 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Bar, Scatter } from 'react-chartjs-2';
+import { AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { TrendingDown, Leaf, Activity } from 'lucide-react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 import './GapAnalysis.css';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartDataLabels
-);
 
 const minesData = [
   { mine_name: 'All', sinkarea: 21420, sinkoffset: 299880, gap: 5748027912, total_emission: 5748327792 },
@@ -90,171 +68,38 @@ const GapAnalysis = ({ onBack }) => {
   const selectedMineData = minesData.find((mine) => mine.mine_name === selectedMine);
   const filteredMinesData = minesData.filter((mine) => mine.mine_name !== 'All');
 
-  const emissionsData = {
-    labels: ['Fuel Emission', 'Electricity Emission', 'Methane Emission'],
-    datasets: [
-      {
-        label: 'Emissions (Million Tons)',
-        data: [5717.48, 44.37, 3760.86],
-        backgroundColor: ['#059669', '#10b981', '#34d399'],
-        borderColor: ['#047857', '#059669', '#10b981'],
-        borderWidth: 2,
-        borderRadius: 8,
-      },
-    ],
-  };
+  // Area chart data for emissions over time (simulated monthly data)
+  const emissionsAreaData = [
+    { month: 'Jan', Fuel: 476, Electricity: 3.7, Methane: 313 },
+    { month: 'Feb', Fuel: 465, Electricity: 3.6, Methane: 308 },
+    { month: 'Mar', Fuel: 485, Electricity: 3.8, Methane: 318 },
+    { month: 'Apr', Fuel: 470, Electricity: 3.65, Methane: 310 },
+    { month: 'May', Fuel: 480, Electricity: 3.75, Methane: 315 },
+    { month: 'Jun', Fuel: 475, Electricity: 3.7, Methane: 312 },
+    { month: 'Jul', Fuel: 490, Electricity: 3.85, Methane: 320 },
+    { month: 'Aug', Fuel: 478, Electricity: 3.72, Methane: 314 },
+    { month: 'Sep', Fuel: 472, Electricity: 3.68, Methane: 311 },
+    { month: 'Oct', Fuel: 482, Electricity: 3.77, Methane: 316 },
+    { month: 'Nov', Fuel: 468, Electricity: 3.63, Methane: 309 },
+    { month: 'Dec', Fuel: 476, Electricity: 3.7, Methane: 313 },
+  ];
 
-  const emissionsOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-      datalabels: {
-        anchor: 'end',
-        align: 'top',
-        color: '#000000',
-        font: { weight: 'bold', size: 13 },
-        formatter: (value) => `${value} MT`,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: { color: '#e5e7eb' },
-        ticks: { color: '#111827', font: { size: 12, weight: '600' } },
-      },
-      x: {
-        grid: { display: false },
-        ticks: { color: '#111827', font: { size: 12, weight: '600' } },
-      },
-    },
-  };
-
-  const sinkData = {
-    labels: filteredMinesData.map((mine) => mine.mine_name),
-    datasets: [
-      {
-        label: 'Mixed',
-        data: filteredMinesData.map((mine) => (mine.mine_type === 'Mixed' ? mine.sinkarea : 0)),
-        backgroundColor: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? '#ffffff' : '#10b981'
-        ),
-        borderColor: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? '#059669' : '#10b981'
-        ),
-        borderWidth: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? 3 : 0
-        ),
-      },
-      {
-        label: 'OC',
-        data: filteredMinesData.map((mine) => (mine.mine_type === 'OC' ? mine.sinkarea : 0)),
-        backgroundColor: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? '#ffffff' : '#059669'
-        ),
-        borderColor: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? '#059669' : '#059669'
-        ),
-        borderWidth: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? 3 : 0
-        ),
-      },
-      {
-        label: 'UG',
-        data: filteredMinesData.map((mine) => (mine.mine_type === 'UG' ? mine.sinkarea : 0)),
-        backgroundColor: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? '#ffffff' : '#16a34a'
-        ),
-        borderColor: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? '#059669' : '#16a34a'
-        ),
-        borderWidth: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? 3 : 0
-        ),
-      },
-    ],
-  };
-
-  const sinkOptions = {
-    indexAxis: 'y',
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { 
-        position: 'top', 
-        labels: { 
-          font: { size: 12, weight: '600' }, 
-          color: '#111827' 
-        } 
-      },
-      title: { display: false },
-      datalabels: { display: false },
-    },
-    scales: {
-      x: {
-        grid: { color: '#e5e7eb' },
-        ticks: { color: '#111827', font: { size: 11, weight: '600' } },
-      },
-      y: {
-        grid: { display: false },
-        ticks: { color: '#111827', font: { size: 11, weight: '600' } },
-      },
-    },
-  };
-
-  const scatterData = {
-    datasets: [
-      {
-        label: 'Mine Emissions',
-        data: filteredMinesData.map((mine) => ({
-          x: mine.sinkarea,
-          y: mine.total_emission,
-          label: mine.mine_name,
-        })),
-        backgroundColor: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? '#ffffff' : '#10b981'
-        ),
-        borderColor: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? '#059669' : '#10b981'
-        ),
-        borderWidth: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? 3 : 0
-        ),
-        pointRadius: filteredMinesData.map((mine) =>
-          mine.mine_name === selectedMine ? 10 : 6
-        ),
-      },
-    ],
-  };
-
-  const scatterOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-      datalabels: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const label = context.raw.label || '';
-            return `${label}: (${context.raw.x}ha, ${context.raw.y.toLocaleString()} tons)`;
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: { color: '#e5e7eb' },
-        ticks: { color: '#111827', font: { size: 12, weight: '600' } },
-      },
-      y: {
-        grid: { color: '#e5e7eb' },
-        ticks: { color: '#111827', font: { size: 12, weight: '600' } },
-      },
-    },
-  };
+  // Bar chart colors - simplified to green, yellow, purple palette
+  const sinkBarColors = [
+    '#10b981', '#34d399', '#6ee7b7', // Greens
+    '#eab308', '#fbbf24', '#fcd34d', // Yellows
+    '#8b5cf6', '#a78bfa', '#c4b5fd', // Purples
+  ];
+  const greenColors = ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0']; // Green gradient
+  const purpleColors = ['#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe']; // Purple gradient
+  
+  // Prepare sink data for horizontal bar chart
+  const sinkChartData = filteredMinesData.map(mine => ({
+    name: mine.mine_name,
+    value: mine.sinkarea,
+    type: mine.mine_type,
+    isSelected: mine.mine_name === selectedMine
+  }));
 
   return (
     <div className="gap-analysis-container">
@@ -269,32 +114,99 @@ const GapAnalysis = ({ onBack }) => {
             <TrendingDown size={26} color="white" />
           </div>
           <div>
-            <p className="stat-label">Total Carbon Emissions (2023)</p>
-            <h2 className="stat-value">
+            <p className="stat-label" style={{ color: 'white' }}>Total Carbon Emissions (2023)</p>
+            <h2 className="stat-value" style={{ color: 'white' }}>
               <CountUp end={5761.84} decimals={2} duration={2.5} />
             </h2>
-            <p className="stat-unit">Million tons of CO₂e</p>
+            <p className="stat-unit" style={{ color: 'white' }}>Million tons of CO₂e</p>
           </div>
         </div>
 
-        <div className="stat-card gradient-green-light">
+        <div className="stat-card gradient-orange">
           <div className="stat-icon">
             <Activity size={26} color="white" />
           </div>
           <div>
-            <p className="stat-label">Total Methane Emissions (2023)</p>
-            <h2 className="stat-value">
+            <p className="stat-label" style={{ color: 'white' }}>Total Methane Emissions (2023)</p>
+            <h2 className="stat-value" style={{ color: 'white' }}>
               <CountUp end={3760.86} decimals={2} duration={2.5} />
             </h2>
-            <p className="stat-unit">Million tons of CH₄</p>
+            <p className="stat-unit" style={{ color: 'white' }}>Million tons of CH₄</p>
           </div>
         </div>
       </div>
 
       <div className="section">
-        <h3 className="section-title">BREAKDOWN BY ACTIVITY</h3>
+        <h3 className="section-title">BREAKDOWN BY ACTIVITY (Monthly Trend)</h3>
         <div className="chart-container">
-          <Bar data={emissionsData} options={emissionsOptions} />
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={emissionsAreaData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorFuel" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#059669" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#059669" stopOpacity={0.2}/>
+                </linearGradient>
+                <linearGradient id="colorElectricity" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.2}/>
+                </linearGradient>
+                <linearGradient id="colorMethane" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#34d399" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#34d399" stopOpacity={0.2}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis 
+                dataKey="month" 
+                stroke="#111827" 
+                style={{ fontSize: '13px', fontWeight: '600' }}
+              />
+              <YAxis 
+                stroke="#111827" 
+                style={{ fontSize: '13px', fontWeight: '600' }}
+                label={{ value: 'Million Tons', angle: -90, position: 'insideLeft', style: { fontSize: '13px', fontWeight: '600', fill: '#111827' } }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: '2px solid #10b981', 
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600'
+                }}
+              />
+              <Legend 
+                wrapperStyle={{ fontSize: '14px', fontWeight: '600' }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="Fuel" 
+                stackId="1" 
+                stroke="#047857" 
+                strokeWidth={2}
+                fill="url(#colorFuel)" 
+                name="Fuel Emission"
+              />
+              <Area 
+                type="monotone" 
+                dataKey="Electricity" 
+                stackId="1" 
+                stroke="#059669" 
+                strokeWidth={2}
+                fill="url(#colorElectricity)" 
+                name="Electricity Emission"
+              />
+              <Area 
+                type="monotone" 
+                dataKey="Methane" 
+                stackId="1" 
+                stroke="#10b981" 
+                strokeWidth={2}
+                fill="url(#colorMethane)" 
+                name="Methane Emission"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -313,7 +225,7 @@ const GapAnalysis = ({ onBack }) => {
         <div className="metrics-grid">
           <div className="metric-card green">
             <div className="metric-header">
-              <Leaf size={20} color="#059669" />
+              <Leaf size={22} color="#10b981" />
               <h4 className="metric-title">Sink Area</h4>
             </div>
             <p className="metric-value green">
@@ -322,23 +234,23 @@ const GapAnalysis = ({ onBack }) => {
             <p className="metric-unit">hectares</p>
           </div>
 
-          <div className="metric-card green-light">
+          <div className="metric-card green">
             <div className="metric-header">
-              <TrendingDown size={20} color="#10b981" />
+              <TrendingDown size={22} color="#10b981" />
               <h4 className="metric-title">Current Offsets</h4>
             </div>
-            <p className="metric-value green-light">
+            <p className="metric-value green">
               <CountUp end={selectedMineData.sinkoffset} duration={2} />
             </p>
             <p className="metric-unit">tons CO₂e</p>
           </div>
 
-          <div className="metric-card green-dark">
+          <div className="metric-card purple">
             <div className="metric-header">
-              <Activity size={20} color="#047857" />
+              <Activity size={22} color="#7c3aed" />
               <h4 className="metric-title">Net Emissions Gap</h4>
             </div>
-            <p className="metric-value green-dark">
+            <p className="metric-value purple">
               <CountUp end={selectedMineData.gap} duration={2} />
             </p>
             <p className="metric-unit">tons CO₂e</p>
@@ -347,16 +259,113 @@ const GapAnalysis = ({ onBack }) => {
 
         <div className="charts-grid">
           <div className="chart-section">
-            <h4 className="chart-title">Sink Distribution by Mine Type</h4>
+            <h4 className="chart-title">Sink Distribution by Mine</h4>
             <div className="chart-container-tall">
-              <Bar data={sinkData} options={sinkOptions} />
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={sinkChartData} 
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 140, bottom: 20 }}
+                  barCategoryGap="20%"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number"
+                    stroke="#111827" 
+                    style={{ fontSize: '12px', fontWeight: '600' }}
+                  />
+                  <YAxis 
+                    type="category"
+                    dataKey="name" 
+                    stroke="#111827" 
+                    style={{ fontSize: '11px', fontWeight: '600' }}
+                    width={130}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '2px solid #10b981', 
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '600'
+                    }}
+                    formatter={(value, name, props) => [
+                      `${value} ha`,
+                      `${props.payload.type} Mine`
+                    ]}
+                  />
+                  <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={10}>
+                    {sinkChartData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`}
+                        fill={entry.isSelected ? '#ffffff' : sinkBarColors[index % sinkBarColors.length]}
+                        stroke={entry.isSelected ? '#10b981' : 'none'}
+                        strokeWidth={entry.isSelected ? 3 : 0}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           <div className="chart-section">
             <h4 className="chart-title">Sink Area vs Total Emissions</h4>
             <div className="chart-container-tall">
-              <Scatter data={scatterData} options={scatterOptions} />
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ top: 20, right: 30, bottom: 60, left: 80 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number" 
+                    dataKey="x" 
+                    name="Sink Area"
+                    stroke="#111827" 
+                    style={{ fontSize: '12px', fontWeight: '600' }}
+                    label={{ value: 'Sink Area (hectares)', position: 'insideBottom', offset: -10, style: { fontSize: '13px', fontWeight: '600', fill: '#111827' } }}
+                  />
+                  <YAxis 
+                    type="number" 
+                    dataKey="y" 
+                    name="Total Emissions"
+                    stroke="#111827" 
+                    style={{ fontSize: '12px', fontWeight: '600' }}
+                    label={{ value: 'Total Emissions (tons)', angle: -90, position: 'insideLeft', style: { fontSize: '13px', fontWeight: '600', fill: '#111827' } }}
+                    tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                  />
+                  <Tooltip 
+                    cursor={{ strokeDasharray: '3 3' }}
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '2px solid #7c3aed', 
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '600'
+                    }}
+                    formatter={(value, name) => [
+                      name === 'Sink Area' ? `${value} ha` : `${value.toLocaleString()} tons`,
+                      name
+                    ]}
+                  />
+                  <Scatter 
+                    data={filteredMinesData.map(mine => ({
+                      x: mine.sinkarea,
+                      y: mine.total_emission,
+                      name: mine.mine_name
+                    }))}
+                    fill="#7c3aed"
+                  >
+                    {filteredMinesData.map((mine, index) => (
+                      <Cell 
+                        key={`cell-${index}`}
+                        fill={mine.mine_name === selectedMine ? '#ffffff' : purpleColors[index % purpleColors.length]}
+                        stroke={mine.mine_name === selectedMine ? '#7c3aed' : purpleColors[index % purpleColors.length]}
+                        strokeWidth={mine.mine_name === selectedMine ? 3 : 0}
+                        r={mine.mine_name === selectedMine ? 10 : 6}
+                      />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>

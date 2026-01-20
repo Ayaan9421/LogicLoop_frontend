@@ -3,15 +3,15 @@ import { Calculator as CalcIcon, Zap, Activity, TrendingUp, Truck, Drill, Users,
 import './Calculator.css';
 
 const Calculator = () => {
-  // Form inputs
-  const [excavation, setExcavation] = useState('');
-  const [transportation, setTransportation] = useState('');
-  const [fuel, setFuel] = useState('');
-  const [equipment, setEquipment] = useState('');
-  const [workers, setWorkers] = useState('');
-  const [output, setOutput] = useState('');
+  // Form inputs with dummy data
+  const [excavation, setExcavation] = useState('5000');
+  const [transportation, setTransportation] = useState('250');
+  const [fuel, setFuel] = useState('1200');
+  const [equipment, setEquipment] = useState('180');
+  const [workers, setWorkers] = useState('25');
+  const [output, setOutput] = useState('8000');
   const [fuelType, setFuelType] = useState('coal');
-  const [reduction, setReduction] = useState('');
+  const [reduction, setReduction] = useState('500');
   
   // Results
   const [results, setResults] = useState(null);
@@ -333,7 +333,7 @@ const Calculator = () => {
                 <strong>{results?.carbonCredits || '0.00'} credits</strong>
               </div>
               <div className="credit-worth">
-                <DollarSign size={20} />
+                ₹
                 <div>
                   <div className="worth-value">₹{results?.worth || '0.00'}</div>
                   <div className="worth-label">Estimated Worth (@₹15/credit)</div>
@@ -346,17 +346,17 @@ const Calculator = () => {
 
       <div className="info-cards-row">
         <div className="info-card">
-          <h4>Export Report</h4>
+          <h2>Export Report</h2>
           <p>Download comprehensive calculation results for compliance and auditing</p>
           <button className="link-btn-calc">Generate PDF →</button>
         </div>
         <div className="info-card">
-          <h4>Historical Data</h4>
+          <h2>Historical Data</h2>
           <p>View trends and compare emissions across different time periods</p>
           <button className="link-btn-calc">View Analytics →</button>
         </div>
         <div className="info-card">
-          <h4>Recommendations</h4>
+          <h2>Recommendations</h2>
           <p>Get AI-powered suggestions to reduce your carbon footprint</p>
           <button className="link-btn-calc">Get Insights →</button>
         </div>

@@ -21,7 +21,7 @@
 
 .page-header-section {
   margin-bottom: 32px;
-  text-align: center;
+  text-align: left;
 }
 
 .page-header-section h1 {
@@ -269,6 +269,7 @@
 }
 
 .result-value {
+  color: white !important;
   font-size: 52px;
   font-weight: 700;
   margin-bottom: 12px;
@@ -406,13 +407,13 @@
 .stat-value {
   font-size: 24px;
   font-weight: 700;
-  color: #1e293b;
+  color: #1e293b !important;
   line-height: 1;
 }
 
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: #64748b !important;
   margin-top: 4px;
 }
 
@@ -454,12 +455,18 @@
   background: white;
   border-radius: 8px;
   font-size: 14px;
+  color: #1e293b;
 }
 
 .credit-row.highlight {
   background: #dcfce7;
   font-weight: 600;
   border: 1px solid #10b981;
+  color: #1e293b;
+}
+
+.credit-row strong {
+  color: #1e293b;
 }
 
 .text-green {
@@ -475,6 +482,7 @@
   border-radius: 12px;
   color: white;
   margin-top: 8px;
+  font-size: 30px;
 }
 
 .worth-value {
@@ -492,51 +500,59 @@
 .info-cards-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 24px;
+  margin-top: 48px;
 }
 
 .info-card {
   background: white;
-  padding: 24px;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  padding: 32px;
+  border-radius: 20px;
+  border: 2px solid #e2e8f0;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
 }
 
 .info-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2);
   border-color: #10b981;
 }
 
-.info-card h4 {
-  font-size: 16px;
+.info-card h2 {
+  font-size: 30px;
   color: #1e293b;
-  margin-bottom: 10px;
-  font-weight: 600;
+  margin-bottom: 14px;
+  font-weight: 700;
 }
 
 .info-card p {
-  font-size: 14px;
+  font-size: 15px;
   color: #64748b;
-  line-height: 1.6;
-  margin-bottom: 16px;
+  line-height: 1.7;
+  margin-bottom: 20px;
 }
 
 .link-btn-calc {
-  background: none;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
-  color: #10b981;
+  color: white;
   font-weight: 600;
   cursor: pointer;
-  font-size: 14px;
-  padding: 0;
-  transition: all 0.2s;
+  font-size: 15px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .link-btn-calc:hover {
-  color: #059669;
   transform: translateX(4px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
 }
 
 /* Responsive */

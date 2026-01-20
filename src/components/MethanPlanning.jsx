@@ -85,7 +85,7 @@ const MethanePlanning = () => {
         ventilation_capacity: parseFloat(p.ventilation_capacity),
       }));
 
-      const res = await fetch("http://localhost:8000/optimize", {
+      const res = await fetch("https://coletta-snouted-rigoberto.ngrok-free.dev/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ panels: formattedPanels }),
