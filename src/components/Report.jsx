@@ -49,7 +49,7 @@ const Reports = () => {
       <div className="page-header-section">
         <div>
           <div className="breadcrumb-small">
-            <span>Home</span>
+            <span>Hoe</span>
             <span>/</span>
             <span>Reports & Complianc</span>
           </div>
