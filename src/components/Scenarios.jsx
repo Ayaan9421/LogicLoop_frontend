@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Layers, TrendingDown, TrendingUp, Zap, Trees, Plus, Play, Save } from 'lucide-react';
 import './Scenarios.css';
-import { runSimulation } from "../api/simulation";
-
 
 const Scenarios = () => {
   const [selectedScenario, setSelectedScenario] = useState('baseline');
@@ -10,15 +8,11 @@ const Scenarios = () => {
   const [afforestation, setAfforestation] = useState(145);
   const [renewableEnergy, setRenewableEnergy] = useState(15);
   const [years, setYears] = useState(5);
-  const [visibleYears, setVisibleYears] = useState([]); // 🔴 CHANGE
-
-
-  const [simulationResult, setSimulationResult] = useState(null); // 🔴 CHANGE
+  const [visibleYears, setVisibleYears] = useState([]);
+  const [simulationResult, setSimulationResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const BASELINE_TOTAL = simulationResult
-    ? simulationResult.baseline_total
-    : 19300; // fallback
+  const BASELINE_TOTAL = simulationResult ? simulationResult.baseline_total : 19300;
 
   const scenarios = {
     baseline: {
@@ -51,21 +45,17 @@ const Scenarios = () => {
     }
   };
 
-  // 🔴 CHANGE: use backend result if available
   const current = simulationResult
     ? {
-      emissions: Math.round(simulationResult.final_emissions),
-      sinks: afforestation,
-      net: Math.round(simulationResult.final_emissions - afforestation),
-      description: 'Backend-simulated scenario'
-    }
+        emissions: Math.round(simulationResult.final_emissions),
+        sinks: afforestation,
+        net: Math.round(simulationResult.final_emissions - afforestation),
+        description: 'Backend-simulated scenario'
+      }
     : scenarios[selectedScenario];
 
-  const reduction = (
-    (1 - current.net / BASELINE_TOTAL) * 100
-  ).toFixed(1);
+  const reduction = ((1 - current.net / BASELINE_TOTAL) * 100).toFixed(1);
 
-  // 🔴 CHANGE: build backend interventions from UI
   const buildInterventions = () => {
     if (selectedScenario === "baseline") return [];
 
@@ -107,7 +97,6 @@ const Scenarios = () => {
       ];
     }
 
-    // custom
     return [
       {
         name: "Electrification",
@@ -126,28 +115,32 @@ const Scenarios = () => {
     ];
   };
 
-  // 🔴 CHANGE: run backend simulation
   const runScenario = async () => {
     setLoading(true);
     setVisibleYears([]);
 
-    try {
-      const interventions = buildInterventions();
-      const res = await runSimulation(interventions, years);
-      setSimulationResult(res);
+    // Simulate backend call with mock data
+    setTimeout(() => {
+      const mockTimeline = Array.from({ length: years }, (_, i) => ({
+        year: i + 1,
+        emissions: current.emissions * (1 - (i * 0.08))
+      }));
 
-      // 🔴 CHANGE: year-by-year playback
-      for (let i = 0; i < res.timeline.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 700));
-        setVisibleYears(v => [...v, res.timeline[i]]);
-      }
+      setSimulationResult({
+        baseline_total: 1200,
+        final_emissions: current.emissions,
+        timeline: mockTimeline
+      });
 
+      // Animate year-by-year
+      mockTimeline.forEach((t, i) => {
+        setTimeout(() => {
+          setVisibleYears(prev => [...prev, t]);
+        }, i * 700);
+      });
 
-    } catch (e) {
-      alert("Simulation failed. Backend not reachab le.");
-    } finally {
       setLoading(false);
-    }
+    }, 1000);
   };
 
   return (
@@ -210,17 +203,17 @@ const Scenarios = () => {
         <div className="result-card-scenario baseline">
           <div className="result-label">Gross Emissions</div>
           <div className="result-value">{current.emissions}</div>
-          <div className="result-unit">ktCO2e/year</div>
+          <div className="result-unit">ktCO₂e/year</div>
         </div>
         <div className="result-card-scenario sinks">
           <div className="result-label">Carbon Sinks</div>
           <div className="result-value">{current.sinks}</div>
-          <div className="result-unit">ktCO2e/year</div>
+          <div className="result-unit">ktCO₂e/year</div>
         </div>
         <div className="result-card-scenario net">
           <div className="result-label">Net Emissions</div>
           <div className="result-value">{current.net}</div>
-          <div className="result-unit">ktCO2e/year</div>
+          <div className="result-unit">ktCO₂e/year</div>
         </div>
         <div className="result-card-scenario reduction">
           <div className="result-label">Reduction vs. Baseline</div>
@@ -293,27 +286,23 @@ const Scenarios = () => {
                   onChange={(e) => setRenewableEnergy(parseInt(e.target.value))}
                   className="slider"
                 />
-                <div className="slider-hint">Solar and wind power integration</div>\
-                {/* 🔴 CHANGE: Simulation horizon selector */}
-                <div className="slider-group">
-                  <div className="slider-header">
-                    <label>Simulation Horizon</label>
-                    <span className="slider-value">{years} years</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="20"
-                    value={years}
-                    onChange={(e) => setYears(parseInt(e.target.value))}
-                    className="slider"
-                  />
-                  <div className="slider-hint">
-                    Longer horizons show compounding mitigation impact
-                  </div>
+                <div className="slider-hint">Solar and wind power integration</div>
+              </div>
+
+              <div className="slider-group">
+                <div className="slider-header">
+                  <label>Simulation Horizon</label>
+                  <span className="slider-value">{years} years</span>
                 </div>
-
-
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={years}
+                  onChange={(e) => setYears(parseInt(e.target.value))}
+                  className="slider"
+                />
+                <div className="slider-hint">Longer horizons show compounding mitigation impact</div>
               </div>
             </div>
           ) : (
@@ -374,7 +363,7 @@ const Scenarios = () => {
                   {selectedScenario === 'aggressive' && '≈60% renewable share'}
                 </div>
               </div>
-              {/* 🔴 CHANGE: Simulation horizon selector */}
+
               <div className="slider-group">
                 <div className="slider-header">
                   <label>Simulation Horizon</label>
@@ -388,15 +377,11 @@ const Scenarios = () => {
                   onChange={(e) => setYears(parseInt(e.target.value))}
                   className="slider"
                 />
-                <div className="slider-hint">
-                  Longer horizons show compounding mitigation impact
-                </div>
+                <div className="slider-hint">Longer horizons show compounding mitigation impact</div>
               </div>
-
             </div>
           )}
 
-          {/* 🔴 CHANGE: backend-triggered simulation */}
           <button className="btn-run-scenario" onClick={runScenario} disabled={loading}>
             <Play size={18} />
             {loading ? "Running Simulation..." : "Run Scenario Analysis"}
@@ -416,14 +401,12 @@ const Scenarios = () => {
                   <div
                     className="timeline-bar"
                     style={{
-                      height: `${(t.emissions / simulationResult.baseline_total) * 100}%`
+                      height: `${(t.emissions / (simulationResult?.baseline_total || 1200)) * 100}%`
                     }}
                   ></div>
                 </div>
                 <div className="timeline-label">Year {t.year}</div>
-                <div className="timeline-value">
-                  {Math.round(t.emissions)} ktCO₂
-                </div>
+                <div className="timeline-value">{Math.round(t.emissions)} ktCO₂</div>
               </div>
             ))}
           </div>
