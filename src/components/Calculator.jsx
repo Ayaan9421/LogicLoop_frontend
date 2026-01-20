@@ -20,6 +20,11 @@ const Calculator = () => {
   const [aiData, setAiData] = useState(null);
   const [aiError, setAiError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+
+
 
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   // 🔹 CHANGE: Level-2 history detail modal
@@ -132,7 +137,39 @@ const Calculator = () => {
       setIsCalculating(false);
     }, 800);
   };
-  
+
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:8000/parse-input", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      if (!data.parsed) return;
+
+      const d = data.data;
+
+      setExcavation(d.excavation || "");
+      setTransportation(d.transportation || "");
+      setFuel(d.fuel || "");
+      setFuelType(d.fuel_type || "coal");
+      setEquipment(d.equipment || "");
+      setWorkers(d.workers || "");
+      setOutput(d.output || "");
+      setReduction(d.reduction || "");
+    } catch (err) {
+      alert("Failed to parse document");
+    }
+  };
+
   const downloadPDF = () => {
     if (!results) {
       alert("Please calculate emissions before generating the report.");
@@ -188,6 +225,43 @@ const Calculator = () => {
     setResults(null);
   };
 
+  const fetchWithRetry = async (
+    url,
+    payload,
+    retries = 3,
+    delay = 1200
+  ) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error("Request failed");
+
+      const data = await response.json();
+
+      // 🚫 Null / empty guard
+      if (
+        data === null ||
+        Object.keys(data).length === 0
+      ) {
+        throw new Error("Empty AI response");
+      }
+
+      return data;
+    } catch (err) {
+      if (retries > 0) {
+        console.warn(`Retrying AI request... (${retries} left)`);
+        await new Promise((res) => setTimeout(res, delay));
+        return fetchWithRetry(url, payload, retries - 1, delay);
+      }
+      throw err;
+    }
+  };
+
+
   const fetchAIInsights = async () => {
     if (!results) return;
 
@@ -197,10 +271,9 @@ const Calculator = () => {
     setAiData(null);
 
     try {
-      const response = await fetch("https://coletta-snouted-rigoberto.ngrok-free.dev/ai/recommendations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const data = await fetchWithRetry(
+        "https://coletta-snouted-rigoberto.ngrok-free.dev/ai/recommendations",
+        {
           excavation_emissions: Number(results.excavationEmissions),
           transportation_emissions: Number(results.transportationEmissions),
           equipment_emissions: Number(results.equipmentEmissions),
@@ -208,16 +281,11 @@ const Calculator = () => {
           output_tonnes: Number(output),
           fuel_type: fuelType,
           total_emissions: Number(results.totalEmissions)
-        })
-      });
+        },
+        3,     // 🔁 retries
+        1200   // ⏳ delay (ms)
+      );
 
-      if (!response.ok) throw new Error("AI request failed");
-
-      const data = await response.json();
-      console.log(data);
-      if (data == null) {
-        fetchAIInsights();
-      }
       setAiData(data);
     } catch (err) {
       console.log(err);
@@ -374,6 +442,110 @@ const Calculator = () => {
             />
             <span className="input-hint">Through efficiency improvements or offsets</span>
           </div>
+
+          <div className="or-upload-divider">
+            <span>OR</span>
+          </div>
+
+          <div style={{ textAlign: "center", marginBottom: "20px" }}>
+            <button
+              className="link-btn-calc"
+              onClick={() => setShowUploadModal(true)}
+            >
+              Upload File →
+            </button>
+          </div>
+
+          {showUploadModal && (
+            <div className="ai-modal-overlay">
+              <div className="ai-modal">
+
+                <button
+                  className="ai-close"
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setUploadError(null);
+                  }}
+                >
+                  ✕
+                </button>
+
+                {!uploadLoading ? (
+                  <>
+                    <h2>Upload Operational Data</h2>
+                    <p style={{ marginBottom: "16px" }}>
+                      Upload a PDF, image, or CSV. AI will extract relevant fields automatically.
+                    </p>
+
+                    <input
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.csv"
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+
+                        setUploadLoading(true);
+                        setUploadError(null);
+
+                        const formData = new FormData();
+                        formData.append("file", file);
+
+                        try {
+                          const res = await fetch("https://coletta-snouted-rigoberto.ngrok-free.dev/file/parse-input", {
+                            method: "POST",
+                            body: formData
+                          });
+
+                          const data = await res.json();
+                          if (!data.parsed) throw new Error("Parsing failed");
+
+                          const d = data.data;
+
+                          // ✅ Autofill existing fields
+                          setExcavation(d.excavation || "");
+                          setTransportation(d.transportation || "");
+                          setFuel(d.fuel || "");
+                          setFuelType(d.fuel_type || "coal");
+                          setEquipment(d.equipment || "");
+                          setWorkers(d.workers || "");
+                          setOutput(d.output || "");
+                          setReduction(d.reduction || "");
+
+                          setShowUploadModal(false);
+                        } catch (err) {
+                          setUploadError("Failed to extract data from file.");
+                        } finally {
+                          setUploadLoading(false);
+                        }
+                      }}
+                    />
+
+                    {uploadError && (
+                      <p className="ai-error" style={{ marginTop: "12px" }}>
+                        {uploadError}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="ai-loader">
+                    <DNA
+                      visible={true}
+                      height={90}
+                      width={90}
+                      ariaLabel="dna-loading"
+                      wrapperClass="dna-wrapper"
+                      dnaColorOne="rgba(16, 185, 129, 0.65)"
+                      dnaColorTwo="#059669"
+                    />
+                    <h3>Processing Document</h3>
+                    <p>Extracting operational parameters…</p>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          )}
+
 
           <div className="button-group">
             <button
@@ -640,8 +812,13 @@ const Calculator = () => {
           <div className="ai-modal">
             <button
               className="ai-close"
-              onClick={() => setShowHistoryModal(false)}
-            >
+              onClick={() => {
+                setShowHistoryModal(false);
+                setHistoryAIData(null);
+                setHistoryAIData(null);
+                setHistoryAIError(null);
+              }
+              }>
               ✕
             </button>
 
@@ -773,58 +950,58 @@ const Calculator = () => {
           </tbody>
         </table>
         <hr />
-<hr />
+        <hr />
 
-<div style={{ pageBreakBefore: "always" }}></div>
-{/* AI Insights Section */}
-{aiData ? (
-  <>
-    <h2>AI Sustainability Insights</h2>
+        <div style={{ pageBreakBefore: "always" }}></div>
+        {/* AI Insights Section */}
+        {aiData ? (
+          <>
+            <h2>AI Sustainability Insights</h2>
 
-    <p style={{ marginBottom: "15px" }}>
-      <strong>Summary:</strong><br />
-      {aiData.summary}
-    </p>
+            <p style={{ marginBottom: "15px" }}>
+              <strong>Summary:</strong><br />
+              {aiData.summary}
+            </p>
 
-    <h3>High Impact Actions</h3>
-    <ul>
-      {aiData.high_impact_actions.map((a, i) => (
-        <li key={i}>{a}</li>
-      ))}
-    </ul>
+            <h3>High Impact Actions</h3>
+            <ul>
+              {aiData.high_impact_actions.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
 
-    <h3>Medium Impact Actions</h3>
-    <ul>
-      {aiData.medium_impact_actions.map((a, i) => (
-        <li key={i}>{a}</li>
-      ))}
-    </ul>
+            <h3>Medium Impact Actions</h3>
+            <ul>
+              {aiData.medium_impact_actions.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
 
-    <h3>Quick Wins</h3>
-    <ul>
-      {aiData.quick_wins.map((a, i) => (
-        <li key={i}>{a}</li>
-      ))}
-    </ul>
+            <h3>Quick Wins</h3>
+            <ul>
+              {aiData.quick_wins.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
 
-    <p style={{ marginTop: "15px" }}>
-      <strong>Estimated Reduction Potential:</strong>{" "}
-      {aiData.estimated_reduction_percent}%
-    </p>
+            <p style={{ marginTop: "15px" }}>
+              <strong>Estimated Reduction Potential:</strong>{" "}
+              {aiData.estimated_reduction_percent}%
+            </p>
 
-    <p style={{ marginTop: "20px", fontSize: "12px", fontStyle: "italic" }}>
-      These recommendations are AI-generated based on the provided operational data and are intended to support sustainability planning.
-    </p>
-  </>
-) : (
-  <>
-    <h2>AI Sustainability Insights</h2>
-    <p style={{ fontStyle: "italic", color: "#555" }}>
-      AI recommendations were not generated for this report.
-      Please run the AI analysis to include optimization insights.
-    </p>
-  </>
-)}
+            <p style={{ marginTop: "20px", fontSize: "12px", fontStyle: "italic" }}>
+              These recommendations are AI-generated based on the provided operational data and are intended to support sustainability planning.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2>AI Sustainability Insights</h2>
+            <p style={{ fontStyle: "italic", color: "#555" }}>
+              AI recommendations were not generated for this report.
+              Please run the AI analysis to include optimization insights.
+            </p>
+          </>
+        )}
 
         <p style={{ marginTop: "30px", fontSize: "12px", textAlign: "center" }}>
           This report is system-generated for carbon auditing and compliance purposes.
