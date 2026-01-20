@@ -171,13 +171,14 @@ const AfforestationEstimator = () => {
 
   const [selectedTreeType, setSelectedTreeType] = useState('mixed');
   const [selectedLandType, setSelectedLandType] = useState('degraded');
-  const canvasRef = useRef(null);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   // Update residual emissions when mine changes
   useEffect(() => {
     setInputs(prev => ({
       ...prev,
-      residualEmissions: Math.round(selectedMine.total_emission / 1000) // Convert to tonnes
+      residualEmissions: Math.round(selectedMine.total_emission / 1000)
     }));
   }, [selectedMine]);
 
@@ -353,118 +354,153 @@ const AfforestationEstimator = () => {
     return dbscan(points, eps, minPts);
   }, [generateTreeLocations]);
 
-  // Draw the visualization
+  // Initialize Leaflet map
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
+    script.onload = () => {
+      const L = window.L;
+      
+      const map = L.map(mapRef.current).setView([selectedMine.latitude, selectedMine.longitude], 13);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+      }).addTo(map);
+
+      mapInstanceRef.current = { map, L, markers: [] };
+      
+      updateMapVisualization();
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (mapInstanceRef.current?.map) {
+        mapInstanceRef.current.map.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update map when mine or calculations change
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      updateMapVisualization();
+    }
+  }, [selectedMine, calculations.treesWithBuffer, generateTreeLocations, clusterData]);
+
+  const updateMapVisualization = () => {
+    if (!mapInstanceRef.current) return;
     
-    const ctx = canvas.getContext('2d');
-    const { points, mineCenter, mineRadius } = generateTreeLocations;
+    const { map, L, markers } = mapInstanceRef.current;
+    
+    markers.forEach(marker => map.removeLayer(marker));
+    markers.length = 0;
+
+    map.setView([selectedMine.latitude, selectedMine.longitude], 13);
+
+    const mineIcon = L.divIcon({
+      className: 'mine-marker',
+      html: `<div style="background: #78716c; border: 3px solid #57534e; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">MINE</div>`,
+      iconSize: [40, 40]
+    });
+    
+    const mineMarker = L.marker([selectedMine.latitude, selectedMine.longitude], { icon: mineIcon })
+      .addTo(map)
+      .bindPopup(`<strong>${selectedMine.mine_name}</strong><br/>Type: ${selectedMine.mine_type}<br/>Emissions: ${(selectedMine.total_emission / 1000000).toFixed(2)}M kgCO2e/yr`);
+    markers.push(mineMarker);
+
     const { clusters, noise } = clusterData;
-    
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(0, 0, 900, 600);
-    
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 900; i += 50) {
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, 600);
-      ctx.stroke();
-    }
-    for (let i = 0; i <= 600; i += 50) {
-      ctx.beginPath();
-      ctx.moveTo(0, i);
-      ctx.lineTo(900, i);
-      ctx.stroke();
-    }
-    
-    const clusterColors = [
-      '#10b981', '#3b82f6', '#f59e0b', '#ef4444', 
-      '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
-    ];
-    
+    const clusterColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+
+    const coordsToLatLng = (x, y) => {
+      const offsetLat = (y - 300) / 10000;
+      const offsetLng = (x - 450) / 10000;
+      return [selectedMine.latitude - offsetLat, selectedMine.longitude + offsetLng];
+    };
+
     clusters.forEach((cluster, idx) => {
       const color = clusterColors[idx % clusterColors.length];
+      const { points } = generateTreeLocations;
       
-      ctx.fillStyle = color + '15';
-      ctx.beginPath();
+      const clusterPoints = cluster.map(pointIdx => {
+        const [x, y] = points[pointIdx];
+        return coordsToLatLng(x, y);
+      });
+
+      if (clusterPoints.length > 2) {
+        const polygon = L.polygon(clusterPoints, {
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.15,
+          weight: 2
+        }).addTo(map);
+        markers.push(polygon);
+      }
+
       cluster.forEach((pointIdx, i) => {
         const [x, y] = points[pointIdx];
-        const adjustedX = (x / 600) * 900;
-        if (i === 0) {
-          ctx.moveTo(adjustedX, y);
-        } else {
-          ctx.lineTo(adjustedX, y);
-        }
+        const latLng = coordsToLatLng(x, y);
+        
+        setTimeout(() => {
+          const treeIcon = L.divIcon({
+            className: 'tree-marker',
+            html: `<div style="color: ${color}; font-size: 20px; animation: treeGrow 0.5s ease-out; transform-origin: bottom;">🌲</div>`,
+            iconSize: [20, 20]
+          });
+          
+          const marker = L.marker(latLng, { icon: treeIcon })
+            .addTo(map);
+          markers.push(marker);
+        }, i * 2);
       });
-      ctx.closePath();
-      ctx.fill();
-      
-      cluster.forEach(pointIdx => {
-        const [x, y] = points[pointIdx];
-        const adjustedX = (x / 600) * 900;
-        drawTree(ctx, adjustedX, y, color);
-      });
     });
-    
-    noise.forEach(pointIdx => {
-      const [x, y] = points[pointIdx];
-      const adjustedX = (x / 600) * 900;
-      drawTree(ctx, adjustedX, y, '#94a3b8');
-    });
-    
-    const mineCenterX = (mineCenter.x / 600) * 900;
-    ctx.fillStyle = '#78716c';
-    ctx.strokeStyle = '#57534e';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(mineCenterX, mineCenter.y, mineRadius, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.stroke();
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('MINE', mineCenterX, mineCenter.y - 5);
-    ctx.font = '12px sans-serif';
-    ctx.fillText('SITE', mineCenterX, mineCenter.y + 10);
-    
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText('DBSCAN Clusters:', 10, 25);
-    
-    clusters.slice(0, 4).forEach((cluster, idx) => {
-      const color = clusterColors[idx % clusterColors.length];
-      ctx.fillStyle = color;
-      ctx.fillRect(10, 35 + idx * 25, 15, 15);
-      ctx.fillStyle = '#1e293b';
-      ctx.font = '12px sans-serif';
-      ctx.fillText(`Cluster ${idx + 1} (${cluster.length} trees)`, 30, 47 + idx * 25);
-    });
-    
-  }, [generateTreeLocations, clusterData]);
 
-  const drawTree = (ctx, x, y, color) => {
-    ctx.fillStyle = '#92400e';
-    ctx.fillRect(x - 2, y, 4, 8);
-    
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x, y - 8);
-    ctx.lineTo(x - 6, y + 2);
-    ctx.lineTo(x + 6, y + 2);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.beginPath();
-    ctx.moveTo(x, y - 4);
-    ctx.lineTo(x - 5, y + 4);
-    ctx.lineTo(x + 5, y + 4);
-    ctx.closePath();
-    ctx.fill();
+    noise.forEach((pointIdx, i) => {
+      const { points } = generateTreeLocations;
+      const [x, y] = points[pointIdx];
+      const latLng = coordsToLatLng(x, y);
+      
+      setTimeout(() => {
+        const treeIcon = L.divIcon({
+          className: 'tree-marker',
+          html: '<div style="color: #94a3b8; font-size: 16px; animation: treeGrow 0.5s ease-out; transform-origin: bottom;">🌳</div>',
+          iconSize: [16, 16]
+        });
+        
+        const marker = L.marker(latLng, { icon: treeIcon })
+          .addTo(map);
+        markers.push(marker);
+      }, (clusters.flat().length + i) * 2);
+    });
+
+    const legend = L.control({ position: 'topright' });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div', 'map-legend');
+      div.style.background = 'white';
+      div.style.padding = '10px';
+      div.style.borderRadius = '8px';
+      div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+      
+      let html = '<strong style="font-size: 14px;">DBSCAN Clusters</strong><br/>';
+      clusters.slice(0, 4).forEach((cluster, idx) => {
+        const color = clusterColors[idx % clusterColors.length];
+        html += `<div style="margin-top: 8px;"><span style="display: inline-block; width: 15px; height: 15px; background: ${color}; border-radius: 3px; margin-right: 6px;"></span><span style="font-size: 12px;">Cluster ${idx + 1} (${cluster.length} trees)</span></div>`;
+      });
+      div.innerHTML = html;
+      return div;
+    };
+    legend.addTo(map);
+    markers.push(legend);
+
+    mapInstanceRef.current.markers = markers;
   };
 
   const formatNumber = (num) => {
@@ -690,15 +726,19 @@ const AfforestationEstimator = () => {
 
             <div className="cost-breakdown">
               <div className="cost-item">
-                <div className="cost-label">Plantation Cost</div>
+                <div>
+                  <div className="cost-label">Plantation Cost</div>
+                  <div className="cost-desc">@ ₹50 per sapling</div>
+                </div>
                 <div className="cost-value">₹ {formatNumber(calculations.totalCost)}</div>
-                <div className="cost-desc">@ ₹50 per sapling</div>
               </div>
 
               <div className="cost-item">
-                <div className="cost-label">Maintenance Cost ({inputs.timeHorizon} years)</div>
+                <div>
+                  <div className="cost-label">Maintenance Cost ({inputs.timeHorizon} years)</div>
+                  <div className="cost-desc">@ ₹15,000 per hectare/year</div>
+                </div>
                 <div className="cost-value">₹ {formatNumber(calculations.maintenanceCost)}</div>
-                <div className="cost-desc">@ ₹15,000 per hectare/year</div>
               </div>
 
               <div className="cost-divider"></div>
@@ -771,11 +811,15 @@ const AfforestationEstimator = () => {
         </div>
 
         <div className="clustering-visualization">
-          <canvas 
-            ref={canvasRef} 
-            width={900} 
-            height={600}
-            className="clustering-canvas"
+          <div 
+            ref={mapRef} 
+            style={{
+              width: '100%',
+              height: '600px',
+              borderRadius: '8px',
+              border: '2px solid #e2e8f0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
           />
         </div>
         <div className="cluster-info-banner">

@@ -772,6 +772,59 @@ const Calculator = () => {
             <tr><td>Estimated Worth</td><td>₹{results?.worth || 0}</td></tr>
           </tbody>
         </table>
+        <hr />
+<hr />
+
+<div style={{ pageBreakBefore: "always" }}></div>
+{/* AI Insights Section */}
+{aiData ? (
+  <>
+    <h2>AI Sustainability Insights</h2>
+
+    <p style={{ marginBottom: "15px" }}>
+      <strong>Summary:</strong><br />
+      {aiData.summary}
+    </p>
+
+    <h3>High Impact Actions</h3>
+    <ul>
+      {aiData.high_impact_actions.map((a, i) => (
+        <li key={i}>{a}</li>
+      ))}
+    </ul>
+
+    <h3>Medium Impact Actions</h3>
+    <ul>
+      {aiData.medium_impact_actions.map((a, i) => (
+        <li key={i}>{a}</li>
+      ))}
+    </ul>
+
+    <h3>Quick Wins</h3>
+    <ul>
+      {aiData.quick_wins.map((a, i) => (
+        <li key={i}>{a}</li>
+      ))}
+    </ul>
+
+    <p style={{ marginTop: "15px" }}>
+      <strong>Estimated Reduction Potential:</strong>{" "}
+      {aiData.estimated_reduction_percent}%
+    </p>
+
+    <p style={{ marginTop: "20px", fontSize: "12px", fontStyle: "italic" }}>
+      These recommendations are AI-generated based on the provided operational data and are intended to support sustainability planning.
+    </p>
+  </>
+) : (
+  <>
+    <h2>AI Sustainability Insights</h2>
+    <p style={{ fontStyle: "italic", color: "#555" }}>
+      AI recommendations were not generated for this report.
+      Please run the AI analysis to include optimization insights.
+    </p>
+  </>
+)}
 
         <p style={{ marginTop: "30px", fontSize: "12px", textAlign: "center" }}>
           This report is system-generated for carbon auditing and compliance purposes.

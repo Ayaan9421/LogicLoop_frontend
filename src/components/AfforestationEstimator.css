@@ -458,23 +458,39 @@
 
 /* Clustering Visualization Styles */
 .clustering-visualization {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   padding: 20px;
   background: #ffffff;
   border-radius: 8px;
-  min-height: 500px;
+  min-height: 600px;
   width: 100%;
 }
 
-.clustering-canvas {
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  width: 100% !important;
-  max-width: 900px;
-  height: auto !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.map-legend {
+  background: white !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+}
+
+.mine-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.tree-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+@keyframes treeGrow {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .cluster-info-banner {
@@ -605,11 +621,6 @@
 
   .cost-value {
     text-align: left;
-  }
-  
-  .clustering-canvas {
-    width: 100% !important;
-    height: auto !important;
   }
 
   .mine-selector-label {

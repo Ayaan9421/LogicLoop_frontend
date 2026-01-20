@@ -1,6 +1,6 @@
 export async function runSimulation(interventions, years = 5) {
         const res = await fetch(
-                `http://localhost:8000/simulate?years=${years}`,
+                `https://coletta-snouted-rigoberto.ngrok-free.dev/simulate?years=${years}`,
                 {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
