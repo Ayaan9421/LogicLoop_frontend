@@ -1,283 +1,266 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import Sensors from "./Sensors";
 import { v4 as uuid } from "uuid";
 
-// Simple icons for the toolbar
-const IconMove = () => <span>✋ Drag/Resize</span>;
-const IconSensor = () => <span>📍 Place Sensors</span>;
+const MapCanvas = ({ mapUrl, sensors, setSensors, activeSensorType, sensorReadings }) => {
+  const [mode, setMode] = useState("interact");
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+  const [size, setSize] = useState({ width: 600, height: 400 });
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef(null);
+  const wrapperRef = useRef(null);
 
-const MapCanvas = ({ mapUrl, sensors, setSensors, activeSensorType, sensorReadings, }) => {
-        // --- STATE ---
-        // Mode: 'interact' (place sensors) or 'edit' (move/resize map)
-        const [mode, setMode] = useState("interact");
+  const handleImageLoad = (e) => {
+    const ratio = e.target.naturalHeight / e.target.naturalWidth;
+    setSize((prev) => ({ ...prev, height: prev.width * ratio }));
+  };
 
-        // Map Transformation State
-        const [position, setPosition] = useState({ x: 50, y: 50 });
-        const [size, setSize] = useState({ width: 600, height: 400 });
+  const startDragMove = (e) => {
+    if (mode !== "edit") return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
 
-        // Internal Dragging State
-        const [isDragging, setIsDragging] = useState(false);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const initialLeft = position.x;
+    const initialTop = position.y;
 
-        // Refs
-        const containerRef = useRef(null); // The full screen canvas
-        const wrapperRef = useRef(null);   // The moving map wrapper
+    const onMouseMove = (moveEvent) => {
+      const dx = moveEvent.clientX - startX;
+      const dy = moveEvent.clientY - startY;
+      setPosition({
+        x: initialLeft + dx,
+        y: initialTop + dy,
+      });
+    };
 
-        // Set initial aspect ratio when image loads
-        const handleImageLoad = (e) => {
-                const ratio = e.target.naturalHeight / e.target.naturalWidth;
-                setSize((prev) => ({ ...prev, height: prev.width * ratio }));
-        };
+    const onMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
 
-        // ----------------------------------------------------------------
-        // 1. DRAG (MOVE) LOGIC
-        // Only works if mode === 'edit'
-        // ----------------------------------------------------------------
-        const startDragMove = (e) => {
-                if (mode !== "edit") return;
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
 
-                e.preventDefault();
-                e.stopPropagation();
-                setIsDragging(true);
+  const startResize = (e, direction) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-                const startX = e.clientX;
-                const startY = e.clientY;
-                const initialLeft = position.x;
-                const initialTop = position.y;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = size.width;
+    const startHeight = size.height;
+    const startLeft = position.x;
+    const startTop = position.y;
 
-                const onMouseMove = (moveEvent) => {
-                        const dx = moveEvent.clientX - startX;
-                        const dy = moveEvent.clientY - startY;
+    const onMouseMove = (moveEvent) => {
+      const dx = moveEvent.clientX - startX;
+      const dy = moveEvent.clientY - startY;
 
-                        setPosition({
-                                x: initialLeft + dx,
-                                y: initialTop + dy,
-                        });
-                };
+      const newSize = { width: startWidth, height: startHeight };
+      const newPos = { x: startLeft, y: startTop };
 
-                const onMouseUp = () => {
-                        setIsDragging(false);
-                        document.removeEventListener("mousemove", onMouseMove);
-                        document.removeEventListener("mouseup", onMouseUp);
-                };
+      if (direction.includes("e")) {
+        newSize.width = Math.max(100, startWidth + dx);
+      }
+      if (direction.includes("w")) {
+        newSize.width = Math.max(100, startWidth - dx);
+        newPos.x = startLeft + dx;
+      }
+      if (direction.includes("s")) {
+        newSize.height = Math.max(100, startHeight + dy);
+      }
+      if (direction.includes("n")) {
+        newSize.height = Math.max(100, startHeight - dy);
+        newPos.y = startTop + dy;
+      }
 
-                document.addEventListener("mousemove", onMouseMove);
-                document.addEventListener("mouseup", onMouseUp);
-        };
+      setSize(newSize);
+      setPosition(newPos);
+    };
 
-        // ----------------------------------------------------------------
-        // 2. RESIZE LOGIC
-        // Works whenever you grab a handle, regardless of mode (usually better UX)
-        // ----------------------------------------------------------------
-        const startResize = (e, direction) => {
-                e.preventDefault();
-                e.stopPropagation(); // Stop it from triggering the "Move" logic below
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
 
-                const startX = e.clientX;
-                const startY = e.clientY;
-                const startWidth = size.width;
-                const startHeight = size.height;
-                const startLeft = position.x;
-                const startTop = position.y;
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
 
-                const onMouseMove = (moveEvent) => {
-                        const dx = moveEvent.clientX - startX;
-                        const dy = moveEvent.clientY - startY;
+  const handleMapClick = (e) => {
+    if (mode === "edit" || !activeSensorType || !wrapperRef.current) return;
 
-                        const newSize = { width: startWidth, height: startHeight };
-                        const newPos = { x: startLeft, y: startTop };
+    const rect = wrapperRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
 
-                        // Width Changes
-                        if (direction.includes("e")) {
-                                newSize.width = Math.max(100, startWidth + dx);
-                        }
-                        if (direction.includes("w")) {
-                                newSize.width = Math.max(100, startWidth - dx);
-                                newPos.x = startLeft + dx;
-                        }
+    if (x < 0 || y < 0 || x > 1 || y > 1) return;
 
-                        // Height Changes
-                        if (direction.includes("s")) {
-                                newSize.height = Math.max(100, startHeight + dy);
-                        }
-                        if (direction.includes("n")) {
-                                newSize.height = Math.max(100, startHeight - dy);
-                                newPos.y = startTop + dy;
-                        }
+    setSensors((prev) => [
+      ...prev,
+      { id: uuid(), type: activeSensorType, x, y },
+    ]);
+  };
 
-                        setSize(newSize);
-                        setPosition(newPos);
-                };
+  const Handle = ({ dir, onResize }) => {
+    const size = 14;
+    const offset = -size / 2;
+    const style = {
+      position: "absolute",
+      width: size,
+      height: size,
+      backgroundColor: "white",
+      border: "2px solid #3b82f6",
+      zIndex: 50,
+      cursor: `${dir}-resize`,
+      borderRadius: "50%",
+      boxShadow: "0 2px 8px rgba(59,130,246,0.3)"
+    };
 
-                const onMouseUp = () => {
-                        document.removeEventListener("mousemove", onMouseMove);
-                        document.removeEventListener("mouseup", onMouseUp);
-                };
+    if (dir.includes("n")) style.top = offset;
+    if (dir.includes("s")) style.bottom = offset;
+    if (dir.includes("w")) style.left = offset;
+    if (dir.includes("e")) style.right = offset;
+    if (dir === "n" || dir === "s") { style.left = "50%"; style.marginLeft = offset; }
+    if (dir === "e" || dir === "w") { style.top = "50%"; style.marginTop = offset; }
 
-                document.addEventListener("mousemove", onMouseMove);
-                document.addEventListener("mouseup", onMouseUp);
-        };
+    return <div onMouseDown={(e) => onResize(e, dir)} style={style} />;
+  };
 
-        // ----------------------------------------------------------------
-        // 3. SENSOR PLACEMENT
-        // Only works if mode === 'interact'
-        // ----------------------------------------------------------------
-        const handleMapClick = (e) => {
-                if (mode === "edit" || !activeSensorType || !wrapperRef.current) return;
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100vh",
+        background: "linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 100,
+          backgroundColor: "white",
+          padding: "6px",
+          borderRadius: 12,
+          boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+          display: "flex",
+          gap: "6px",
+          border: "1px solid #e5e7eb"
+        }}
+      >
+        <button
+          onClick={() => setMode("interact")}
+          style={{
+            padding: "10px 16px",
+            background: mode === "interact" ? "linear-gradient(135deg, #3b82f6, #2563eb)" : "#f9fafb",
+            color: mode === "interact" ? "white" : "#6b7280",
+            border: "none",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontSize: 14,
+            fontWeight: 600,
+            transition: "all 0.2s",
+            boxShadow: mode === "interact" ? "0 4px 12px rgba(59,130,246,0.3)" : "none"
+          }}
+        >
+          📍 Place Sensors
+        </button>
+        <button
+          onClick={() => setMode("edit")}
+          style={{
+            padding: "10px 16px",
+            background: mode === "edit" ? "linear-gradient(135deg, #3b82f6, #2563eb)" : "#f9fafb",
+            color: mode === "edit" ? "white" : "#6b7280",
+            border: "none",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontSize: 14,
+            fontWeight: 600,
+            transition: "all 0.2s",
+            boxShadow: mode === "edit" ? "0 4px 12px rgba(59,130,246,0.3)" : "none"
+          }}
+        >
+          ✋ Drag/Resize
+        </button>
+      </div>
 
-                const rect = wrapperRef.current.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / rect.width;
-                const y = (e.clientY - rect.top) / rect.height;
+      {!mapUrl ? (
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: 100,
+            color: "#9ca3af",
+            fontSize: 16
+          }}
+        >
+          <div style={{ fontSize: 64, marginBottom: 16 }}>📁</div>
+          Upload a mine map to start
+        </div>
+      ) : (
+        <div
+          ref={wrapperRef}
+          onMouseDown={startDragMove}
+          onClick={handleMapClick}
+          style={{
+            position: "absolute",
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+            width: `${size.width}px`,
+            height: `${size.height}px`,
+            cursor:
+              mode === "edit"
+                ? isDragging
+                  ? "grabbing"
+                  : "grab"
+                : "crosshair",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+            userSelect: "none",
+            borderRadius: 8,
+            overflow: "hidden",
+            border: mode === "edit" ? "3px solid #3b82f6" : "none"
+          }}
+        >
+          <img
+            src={mapUrl}
+            alt="Mine Map"
+            onLoad={handleImageLoad}
+            draggable={false}
+            style={{
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              display: "block",
+            }}
+          />
 
-                // Boundary check
-                if (x < 0 || y < 0 || x > 1 || y > 1) return;
+          <Sensors sensors={sensors} readings={sensorReadings} />
 
-                setSensors((prev) => [
-                        ...prev,
-                        { id: uuid(), type: activeSensorType, x, y },
-                ]);
-        };
-
-        return (
-                <div
-                        ref={containerRef}
-                        className="map-canvas"
-                        style={{
-                                position: "relative",
-                                width: "100%",
-                                height: "100vh",
-                                backgroundColor: "#e5e7eb",
-                                overflow: "hidden",
-                        }}
-                >
-                        {/* --- TOOLBAR --- */}
-                        <div
-                                style={{
-                                        position: "absolute",
-                                        top: 20,
-                                        left: "50%",
-                                        transform: "translateX(-50%)",
-                                        zIndex: 100,
-                                        backgroundColor: "white",
-                                        padding: "8px 16px",
-                                        borderRadius: "8px",
-                                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                                        display: "flex",
-                                        gap: "10px",
-                                }}
-                        >
-                                <button
-                                        onClick={() => setMode("interact")}
-                                        style={{
-                                                padding: "8px 12px",
-                                                background: mode === "interact" ? "#3b82f6" : "#f3f4f6",
-                                                color: mode === "interact" ? "white" : "black",
-                                                border: "none",
-                                                borderRadius: "4px",
-                                                cursor: "pointer",
-                                        }}
-                                >
-                                        <IconSensor />
-                                </button>
-                                <button
-                                        onClick={() => setMode("edit")}
-                                        style={{
-                                                padding: "8px 12px",
-                                                background: mode === "edit" ? "#3b82f6" : "#f3f4f6",
-                                                color: mode === "edit" ? "white" : "black",
-                                                border: "none",
-                                                borderRadius: "4px",
-                                                cursor: "pointer",
-                                        }}
-                                >
-                                        <IconMove />
-                                </button>
-                        </div>
-
-                        {!mapUrl ? (
-                                <div style={{ textAlign: "center", marginTop: 100, color: "#666" }}>
-                                        Upload a mine map to start
-                                </div>
-                        ) : (
-                                <div
-                                        ref={wrapperRef}
-                                        onMouseDown={startDragMove} // Drag Logic attached here
-                                        onClick={handleMapClick}    // Sensor Logic attached here
-                                        style={{
-                                                position: "absolute",
-                                                left: `${position.x}px`,
-                                                top: `${position.y}px`,
-                                                width: `${size.width}px`,
-                                                height: `${size.height}px`,
-                                                cursor: mode === "edit" ? (isDragging ? "grabbing" : "grab") : "crosshair",
-                                                boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
-                                                userSelect: "none", // Critical for clean dragging
-                                        }}
-                                >
-                                        <img
-                                                src={mapUrl}
-                                                alt="Mine Map"
-                                                onLoad={handleImageLoad}
-                                                draggable={false}
-                                                style={{
-                                                        width: "100%",
-                                                        height: "100%",
-                                                        pointerEvents: "none", // Allows clicks to pass through to the div
-                                                        display: "block",
-                                                }}
-                                        />
-
-                                        <Sensors
-                                                sensors={sensors}
-                                                readings={sensorReadings}
-                                        />
-
-                                        {/* Resize Handles - Only visible in Edit Mode? 
-              Lets keep them visible but only 'active' feeling if you want. 
-              Here I render them always, but you can wrap in {mode === 'edit' && ...}
-          */}
-                                        {mode === 'edit' && (
-                                                <>
-                                                        <Handle dir="nw" onResize={startResize} />
-                                                        <Handle dir="ne" onResize={startResize} />
-                                                        <Handle dir="sw" onResize={startResize} />
-                                                        <Handle dir="se" onResize={startResize} />
-                                                        <Handle dir="n" onResize={startResize} />
-                                                        <Handle dir="s" onResize={startResize} />
-                                                        <Handle dir="e" onResize={startResize} />
-                                                        <Handle dir="w" onResize={startResize} />
-                                                        {/* Border outline for visibility */}
-                                                        <div style={{ position: 'absolute', inset: 0, border: '2px dashed #3b82f6', pointerEvents: 'none' }} />
-                                                </>
-                                        )}
-                                </div>
-                        )}
-                </div>
-        );
-};
-
-// Reusable Handle Component
-const Handle = ({ dir, onResize }) => {
-        const size = 12;
-        const offset = -size / 2;
-        const style = {
-                position: "absolute",
-                width: size,
-                height: size,
-                backgroundColor: "white",
-                border: "1px solid #3b82f6",
-                zIndex: 50,
-                cursor: `${dir}-resize`,
-        };
-
-        // Position Logic
-        if (dir.includes("n")) style.top = offset;
-        if (dir.includes("s")) style.bottom = offset;
-        if (dir.includes("w")) style.left = offset;
-        if (dir.includes("e")) style.right = offset;
-        if (dir === "n" || dir === "s") { style.left = "50%"; style.marginLeft = offset; }
-        if (dir === "e" || dir === "w") { style.top = "50%"; style.marginTop = offset; }
-
-        return <div onMouseDown={(e) => onResize(e, dir)} style={style} />;
+          {mode === "edit" && (
+            <>
+              <Handle dir="nw" onResize={startResize} />
+              <Handle dir="ne" onResize={startResize} />
+              <Handle dir="sw" onResize={startResize} />
+              <Handle dir="se" onResize={startResize} />
+              <Handle dir="n" onResize={startResize} />
+              <Handle dir="s" onResize={startResize} />
+              <Handle dir="e" onResize={startResize} />
+              <Handle dir="w" onResize={startResize} />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default MapCanvas;
