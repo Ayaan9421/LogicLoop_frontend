@@ -76,20 +76,20 @@
   flex-shrink: 0;
 }
 
-.stat-label {
+.sta-label {
   font-size: 13px;
   font-weight: 500;
   margin-bottom: 8px;
   opacity: 0.95;
-  color: white;
+  color: white !important;
 }
 
-.stat-value {
+.sta-value {
   font-size: 40px;
   font-weight: 700;
   margin-bottom: 4px;
   line-height: 1;
-  color: white;
+  color: white !important;
 }
 
 .stat-unit {

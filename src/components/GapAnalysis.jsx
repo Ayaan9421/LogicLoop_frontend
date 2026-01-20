@@ -114,8 +114,8 @@ const GapAnalysis = ({ onBack }) => {
             <TrendingDown size={26} color="white" />
           </div>
           <div>
-            <p className="stat-label" style={{ color: 'white' }}>Total Carbon Emissions (2023)</p>
-            <h2 className="stat-value" style={{ color: 'white' }}>
+            <p className="sta-label" style={{ color: 'white' }}>Total Carbon Emissions (2023)</p>
+            <h2 className="sta-value" style={{ color: 'white' }}>
               <CountUp end={5761.84} decimals={2} duration={2.5} />
             </h2>
             <p className="stat-unit" style={{ color: 'white' }}>Million tons of CO₂e</p>
@@ -127,8 +127,8 @@ const GapAnalysis = ({ onBack }) => {
             <Activity size={26} color="white" />
           </div>
           <div>
-            <p className="stat-label" style={{ color: 'white' }}>Total Methane Emissions (2023)</p>
-            <h2 className="stat-value" style={{ color: 'white' }}>
+            <p className="sta-label" style={{ color: 'white' }}>Total Methane Emissions (2023)</p>
+            <h2 className="sta-value" style={{ color: 'white' }}>
               <CountUp end={3760.86} decimals={2} duration={2.5} />
             </h2>
             <p className="stat-unit" style={{ color: 'white' }}>Million tons of CH₄</p>
