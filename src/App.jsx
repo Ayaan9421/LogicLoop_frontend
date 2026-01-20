@@ -21,13 +21,13 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <Sidebar 
-        isCollapsed={isCollapsed} 
+      <Sidebar
+        isCollapsed={isCollapsed}
         activePage={activePage}
         setActivePage={setActivePage}
         toggleSidebar={toggleSidebar}
       />
-      
+
       <div className="main-content">
         <div className="topbar">
           <div className="search-bar">
