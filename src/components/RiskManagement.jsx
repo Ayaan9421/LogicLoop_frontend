@@ -1,265 +1,176 @@
-import React, { useState } from 'react';
-import { AlertTriangle, Shield, Activity, TrendingUp, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
-import './RiskManagement.css';
+import React, { useEffect } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import "leaflet.heat";
 
-const RiskManagement = () => {
-  const [filterPriority, setFilterPriority] = useState('all');
-
-  const risks = [
-    {
-      id: 1,
-      title: 'Methane Concentration Spike - Zone A',
-      category: 'Safety',
-      priority: 'critical',
-      probability: 'High',
-      impact: 'Severe',
-      status: 'active',
-      mitigation: 'Emergency ventilation upgrade in progress',
-      owner: 'Safety Team',
-      deadline: 'Jan 25, 2026'
-    },
-    {
-      id: 2,
-      title: 'Emission Target Exceedance Risk',
-      category: 'Compliance',
-      priority: 'high',
-      probability: 'Medium',
-      impact: 'High',
-      status: 'monitoring',
-      mitigation: 'Accelerate renewable energy adoption',
-      owner: 'Sustainability',
-      deadline: 'Feb 15, 2026'
-    },
-    {
-      id: 3,
-      title: 'Sensor Network Degradation',
-      category: 'Technology',
-      priority: 'medium',
-      probability: 'Medium',
-      impact: 'Medium',
-      status: 'mitigated',
-      mitigation: 'Preventive maintenance schedule implemented',
-      owner: 'Engineering',
-      deadline: 'Completed'
-    },
-    {
-      id: 4,
-      title: 'Weather Impact on Afforestation',
-      category: 'Environmental',
-      priority: 'low',
-      probability: 'Low',
-      impact: 'Medium',
-      status: 'monitoring',
-      mitigation: 'Irrigation system enhancement planned',
-      owner: 'Env. Team',
-      deadline: 'Mar 01, 2026'
-    },
-    {
-      id: 5,
-      title: 'Equipment Failure Emissions Surge',
-      category: 'Operational',
-      priority: 'high',
-      probability: 'Medium',
-      impact: 'High',
-      status: 'active',
-      mitigation: 'Implementing predictive maintenance AI',
-      owner: 'Operations',
-      deadline: 'Jan 30, 2026'
-    }
-  ];
-
-  const filteredRisks = filterPriority === 'all' 
-    ? risks 
-    : risks.filter(r => r.priority === filterPriority);
-
-  const riskStats = {
-    total: risks.length,
-    critical: risks.filter(r => r.priority === 'critical').length,
-    high: risks.filter(r => r.priority === 'high').length,
-    active: risks.filter(r => r.status === 'active').length,
-    mitigated: risks.filter(r => r.status === 'mitigated').length
+const App = () => {
+  const getRiskLevel = (intensity) => {
+    if (intensity < 0.05) return { level: "Low", color: "#006400" };
+    if (intensity < 0.10) return { level: "Medium", color: "#ADFF2F" };
+    return { level: "High", color: "#FFD700" };
   };
 
+  useEffect(() => {
+    const points = [
+      { humidity: 43, intensity: 0.06999, lat: 23.6483, lng: 87.2575, mine: "A SHYAMSUNOERPURA", rain: 0, slope: 7 },
+      { humidity: 29, intensity: 0.03868, lat: 18.6648, lng: 79.579, mine: "ALP", rain: 0, slope: 1 },
+      { humidity: 28, intensity: 0.13516, lat: 23.8078, lng: 86.3221, mine: "AKWMC", rain: 0, slope: 27 },
+      { humidity: 31, intensity: 0.08895, lat: 23.1542, lng: 81.5361, mine: "BANGWARA", rain: 0, slope: 16 },
+      { humidity: 43, intensity: 0.09419, lat: 23.6296, lng: 87.1382, mine: "BANSRA", rain: 0, slope: 14 },
+      { humidity: 30, intensity: 0.03494, lat: 23.7276, lng: 86.9943, mine: "BHANORA", rain: 0, slope: 1 },
+      { humidity: 25, intensity: 0.1125, lat: 20.9725, lng: 85.1732, mine: "BHUBANESWARI", rain: 0, slope: 1 },
+      { humidity: 25, intensity: 0.174, lat: 22.3308, lng: 82.5958, mine: "GEVRA OC", rain: 0, slope: 4 }
+    ];
+
+    const riskCounts = { Low: 0, Medium: 0, High: 0 };
+    points.forEach(p => {
+      const risk = getRiskLevel(p.intensity);
+      riskCounts[risk.level]++;
+    });
+
+    const map = L.map("map").setView([23, 85], 5);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    // Normalize intensity
+    const maxIntensity = Math.max(...points.map(p => p.intensity));
+
+    const heatData = points.map(p => [
+      p.lat,
+      p.lng,
+      p.intensity / maxIntensity
+    ]);
+
+    // Heatmap
+    L.heatLayer(heatData, {
+      radius: 35,
+      blur: 30,
+      minOpacity: 0.4,
+      gradient: {
+        0.2: "#006400",   // low risk
+        0.5: "#ADFF2F",   // medium risk
+        0.9: "#FFD700"    // high risk
+      }
+    }).addTo(map);
+
+    // Popups
+    points.forEach(p => {
+      const risk = getRiskLevel(p.intensity);
+      L.circleMarker([p.lat, p.lng], {
+        radius: 8,
+        color: risk.color,
+        fillColor: risk.color,
+        fillOpacity: 0.7,
+        weight: 2
+      })
+        .addTo(map)
+        .bindPopup(
+          `<div style="font-family: Arial, sans-serif;">
+             <b style="font-size: 14px; color: #333;">${p.mine}</b>
+             <div style="margin-top: 8px; padding: 6px; background: ${risk.color}; color: #000; border-radius: 4px; font-weight: bold;">
+               Risk Level: ${risk.level}
+             </div>
+             <div style="margin-top: 8px; line-height: 1.6;">
+               <b>Intensity:</b> ${(p.intensity * 100).toFixed(2)}%<br>
+               <b>Slope:</b> ${p.slope}°<br>
+               <b>Rain:</b> ${p.rain} mm<br>
+               <b>Humidity:</b> ${p.humidity}%
+             </div>
+           </div>`
+        );
+    });
+
+    return () => map.remove();
+  }, []);
+
   return (
-    <div className="risk-page">
-      <div className="page-header-section">
-        <div>
-
-          <h1>Risk Management Dashboard</h1>
-          <p>Identify, assess, and mitigate operational and environmental risks</p>
+    <div style={{ fontFamily: "Arial, sans-serif" }}>
+      {/* Risk Dashboard */}
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        gap: "20px", 
+        margin: "0 20px 20px",
+        flexWrap: "wrap"
+      }}>
+        <div style={{ 
+          padding: "15px 30px", 
+          background: "#006400", 
+          color: "#fff", 
+          borderRadius: "8px",
+          minWidth: "120px",
+          textAlign: "center"
+        }}>
+          <div style={{ fontSize: "24px", fontWeight: "bold" }}>3</div>
+          <div style={{ fontSize: "12px", marginTop: "5px" }}>Low Risk</div>
+        </div>
+        <div style={{ 
+          padding: "15px 30px", 
+          background: "#ADFF2F", 
+          color: "#000", 
+          borderRadius: "8px",
+          minWidth: "120px",
+          textAlign: "center"
+        }}>
+          <div style={{ fontSize: "24px", fontWeight: "bold" }}>3</div>
+          <div style={{ fontSize: "12px", marginTop: "5px" }}>Medium Risk</div>
+        </div>
+        <div style={{ 
+          padding: "15px 30px", 
+          background: "#FFD700", 
+          color: "#000", 
+          borderRadius: "8px",
+          minWidth: "120px",
+          textAlign: "center"
+        }}>
+          <div style={{ fontSize: "24px", fontWeight: "bold" }}>2</div>
+          <div style={{ fontSize: "12px", marginTop: "5px" }}>High Risk</div>
         </div>
       </div>
 
-      <div className="risk-metrics-grid">
-        <div className="risk-metric-card">
-          <div className="metric-icon-risk">
-            <AlertTriangle size={28} color="#ef4444" />
+      {/* Legend */}
+      <div style={{ 
+        position: "absolute", 
+        top: "200px", 
+        right: "20px", 
+        zIndex: 1000,
+        background: "#000",
+        color: "#fff",
+        padding: "15px",
+        borderRadius: "8px",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.2)"
+      }}>
+        <h4 style={{ margin: "0 0 10px 0", fontSize: "14px" }}>Risk Levels</h4>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "20px", height: "20px", background: "#006400", borderRadius: "3px" }}></div>
+            <span style={{ fontSize: "12px" }}>Low (&lt;5%)</span>
           </div>
-          <div className="metric-content-risk">
-            <div className="metric-label-risk">Total Active Risks</div>
-            <div className="metric-value-risk">{riskStats.total}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "20px", height: "20px", background: "#ADFF2F", borderRadius: "3px" }}></div>
+            <span style={{ fontSize: "12px" }}>Medium (5-10%)</span>
           </div>
-        </div>
-
-        <div className="risk-metric-card critical-card">
-          <div className="metric-icon-risk">
-            <XCircle size={28} color="#dc2626" />
-          </div>
-          <div className="metric-content-risk">
-            <div className="metric-label-risk">Critical Priority</div>
-            <div className="metric-value-risk">{riskStats.critical}</div>
-          </div>
-        </div>
-
-        <div className="risk-metric-card high-card">
-          <div className="metric-icon-risk">
-            <AlertCircle size={28} color="#f59e0b" />
-          </div>
-          <div className="metric-content-risk">
-            <div className="metric-label-risk">High Priority</div>
-            <div className="metric-value-risk">{riskStats.high}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "20px", height: "20px", background: "#FFD700", borderRadius: "3px" }}></div>
+            <span style={{ fontSize: "12px" }}>High (&gt;10%)</span>
           </div>
         </div>
-
-        <div className="risk-metric-card success-card">
-          <div className="metric-icon-risk">
-            <CheckCircle size={28} color="#10b981" />
-          </div>
-          <div className="metric-content-risk">
-            <div className="metric-label-risk">Mitigated</div>
-            <div className="metric-value-risk">{riskStats.mitigated}</div>
-          </div>
+        <div style={{ marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #444" }}>
+          <h4 style={{ margin: "0 0 8px 0", fontSize: "12px" }}>Risk Factors</h4>
+          <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "11px", lineHeight: "1.6" }}>
+            <li>Slope angle</li>
+            <li>Rainfall</li>
+            <li>Humidity</li>
+            <li>Intensity score</li>
+          </ul>
         </div>
       </div>
 
-      <div className="risk-filter-bar">
-        <h3>Risk Register</h3>
-        <div className="filter-buttons-risk">
-          <button 
-            className={`filter-btn-risk ${filterPriority === 'all' ? 'active' : ''}`}
-            onClick={() => setFilterPriority('all')}
-          >
-            All Risks
-          </button>
-          <button 
-            className={`filter-btn-risk critical ${filterPriority === 'critical' ? 'active' : ''}`}
-            onClick={() => setFilterPriority('critical')}
-          >
-            Critical
-          </button>
-          <button 
-            className={`filter-btn-risk high ${filterPriority === 'high' ? 'active' : ''}`}
-            onClick={() => setFilterPriority('high')}
-          >
-            High
-          </button>
-          <button 
-            className={`filter-btn-risk medium ${filterPriority === 'medium' ? 'active' : ''}`}
-            onClick={() => setFilterPriority('medium')}
-          >
-            Medium
-          </button>
-          <button 
-            className={`filter-btn-risk low ${filterPriority === 'low' ? 'active' : ''}`}
-            onClick={() => setFilterPriority('low')}
-          >
-            Low
-          </button>
-        </div>
-      </div>
-
-      <div className="risks-list">
-        {filteredRisks.map((risk) => (
-          <div key={risk.id} className={`risk-card priority-${risk.priority}`}>
-            <div className="risk-card-header">
-              <div className="risk-header-left">
-                <div className={`priority-indicator ${risk.priority}`}></div>
-                <div>
-                  <h4 className="risk-title">{risk.title}</h4>
-                  <div className="risk-meta">
-                    <span className="risk-category">{risk.category}</span>
-                    <span className="meta-separator">•</span>
-                    <span className="risk-owner">{risk.owner}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="risk-badges">
-                <span className={`status-badge-risk ${risk.status}`}>
-                  {risk.status === 'active' && 'ACTIVE'}
-                  {risk.status === 'monitoring' && 'MONITORING'}
-                  {risk.status === 'mitigated' && 'MITIGATED'}
-                </span>
-                <span className={`priority-badge-risk ${risk.priority}`}>
-                  {risk.priority.toUpperCase()}
-                </span>
-              </div>
-            </div>
-
-            <div className="risk-assessment">
-              <div className="assessment-item">
-                <span className="assessment-label">Probability</span>
-                <span className="assessment-value">{risk.probability}</span>
-              </div>
-              <div className="assessment-item">
-                <span className="assessment-label">Impact</span>
-                <span className="assessment-value">{risk.impact}</span>
-              </div>
-            </div>
-
-            <div className="risk-mitigation">
-              <div className="mitigation-label">
-                <Shield size={16} />
-                Mitigation Strategy
-              </div>
-              <div className="mitigation-text">{risk.mitigation}</div>
-            </div>
-
-            <div className="risk-footer">
-              <div className="risk-deadline">
-                <Clock size={14} />
-                Deadline: {risk.deadline}
-              </div>
-              <button className="view-details-btn">View Details →</button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="risk-matrix-section">
-        <div className="card-header">
-          <h3>Risk Assessment Matrix</h3>
-          <p className="card-subtitle">Probability vs. Impact visualization</p>
-        </div>
-        <div className="risk-matrix">
-          <div className="matrix-row">
-            <div className="matrix-label">High</div>
-            <div className="matrix-cell medium">1</div>
-            <div className="matrix-cell high">2</div>
-            <div className="matrix-cell critical">1</div>
-          </div>
-          <div className="matrix-row">
-            <div className="matrix-label">Medium</div>
-            <div className="matrix-cell low">0</div>
-            <div className="matrix-cell medium">2</div>
-            <div className="matrix-cell high">0</div>
-          </div>
-          <div className="matrix-row">
-            <div className="matrix-label">Low</div>
-            <div className="matrix-cell low">1</div>
-            <div className="matrix-cell low">0</div>
-            <div className="matrix-cell medium">0</div>
-          </div>
-          <div className="matrix-row">
-            <div className="matrix-label"></div>
-            <div className="matrix-label-bottom">Low</div>
-            <div className="matrix-label-bottom">Medium</div>
-            <div className="matrix-label-bottom">High</div>
-          </div>
-          <div className="matrix-axis-label">IMPACT →</div>
-        </div>
-      </div>
+      <div id="map" style={{ height: "70vh", width: "100%" }} />
     </div>
   );
 };
 
-export default RiskManagement;
+export default App;
