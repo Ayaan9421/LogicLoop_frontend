@@ -502,9 +502,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
   }
+
   50% {
     box-shadow: 0 4px 24px rgba(16, 185, 129, 0.6);
   }
@@ -531,9 +534,12 @@
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-4px);
   }
@@ -598,9 +604,12 @@
 }
 
 @keyframes shimmer {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -763,6 +772,7 @@
 }
 
 @media (max-width: 480px) {
+
   .mp-section-header h2,
   .mp-results-title-section h2 {
     font-size: 18px;
@@ -780,4 +790,23 @@
   .mp-stat-value {
     font-size: 28px;
   }
+}
+
+.or-upload-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-items: center;
+  margin: 18px 0;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.or-upload-divider::before,
+.or-upload-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0 12px;
 }
